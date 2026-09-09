@@ -289,7 +289,7 @@ class AIOrchestrator
             ];
         }
 
-        // 4. Intent Classification & Query Rewriting (Model 1 — Router)
+        // 4. Intent Classification & Query Rewriting (Model 1 : Router)
         // Returns: {intent: RAG_DOCS|DB_SEARCH|CHITCHAT, standalone_query, search_entity}
         $activeProvider = $this->resolveHealthyProvider();
         if ($activeProvider !== null) {
@@ -301,7 +301,7 @@ class AIOrchestrator
         $effectiveMsg    = $classified['standalone_query'];
         $searchEntity    = $classified['search_entity'] ?? null;
 
-        // Short-circuit: CHITCHAT — respond naturally, no tool/LLM needed
+        // Short-circuit: CHITCHAT : respond naturally, no tool/LLM needed
         if ($intent === QueryRewriterService::INTENT_CHITCHAT) {
             $chitchatReplies = [
                 'Sama-sama! Ada yang bisa saya bantu lagi?',
@@ -320,11 +320,11 @@ class AIOrchestrator
 
         $effectiveLower = trim(preg_replace('/[^\w\s]/u', '', strtolower($effectiveMsg)));
 
-        // 5a. RAG_DOCS intent — skip DB tool resolver, route directly to LLM
+        // 5a. RAG_DOCS intent : skip DB tool resolver, route directly to LLM
         //     (system_manual content injected via LLM fallback below; no tool needed)
         $resolvedToolIntent = null;
         if ($intent === QueryRewriterService::INTENT_DB) {
-            // 5b. DB_SEARCH intent — Local NLU Tool Resolver
+            // 5b. DB_SEARCH intent : Local NLU Tool Resolver
             // Order matters: most specific first, broad keywords last.
             $resolvedToolIntent = $this->resolveLocalToolIntent($effectiveMsg, $effectiveLower);
         }
@@ -419,8 +419,8 @@ class AIOrchestrator
             }
         }
 
-        // 6. LLM Fallback with provider chain (primary → fallbacks)
-        // $activeProvider already resolved above for query rewriter — reuse it
+        // 6. LLM Fallback with provider chain (primary -> fallbacks)
+        // $activeProvider already resolved above for query rewriter : reuse it
         if ($activeProvider !== null) {
             try {
                 // Summarization (Metode 3): auto-compress when history grows long
@@ -495,7 +495,7 @@ class AIOrchestrator
             }
         }
 
-        // 5. Static fallback — Layer 1: detect ambiguous input before generic reply
+        // 5. Static fallback : Layer 1: detect ambiguous input before generic reply
         $isAmbiguous = strlen(trim($lowerMsg)) >= 3
             && strlen(trim($lowerMsg)) <= 60
             && !str_contains($lowerMsg, 'owner')
@@ -632,11 +632,11 @@ class AIOrchestrator
      *  3. Temporary invoice: get_temporary_invoice
      *  4. Inventory/pharmacy (before generic owner to avoid "obat" matching owner)
      *  5. Owner search
-     *  6. Appointment list (broad — booking/antrean keyword)
+     *  6. Appointment list (broad : booking/antrean keyword)
      */
     protected function resolveLocalToolIntent(string $rawMsg, string $lowerMsg): ?array
     {
-        // 1. Create appointment — most specific, requires "buat/tambah/bikin/daftar" + booking intent
+        // 1. Create appointment : most specific, requires "buat/tambah/bikin/daftar" + booking intent
         // Exclude informational queries: "alur", "step", "cara", "bagaimana", "proses", "tahap"
         $isInfoQuery    = (str_contains($lowerMsg, 'alur') || str_contains($lowerMsg, 'step')
             || str_contains($lowerMsg, 'cara') || str_contains($lowerMsg, 'bagaimana')
@@ -672,12 +672,12 @@ class AIOrchestrator
             ];
         }
 
-        // 2a. Compare omzet — MUST come before get_omzet_report (also matches 'omzet')
+        // 2a. Compare omzet : MUST come before get_omzet_report (also matches 'omzet')
         $isCompareIntent = str_contains($lowerMsg, 'bandingkan') || str_contains($lowerMsg, 'perbandingan')
             || str_contains($lowerMsg, 'dibanding') || str_contains($lowerMsg, ' vs ');
         $isOmzetKeyword  = str_contains($lowerMsg, 'omzet') || str_contains($lowerMsg, 'pendapatan')
             || str_contains($lowerMsg, 'pemasukan');
-        // "bandingkan kedua bulan itu/tadi" — compare without explicit omzet keyword
+        // "bandingkan kedua bulan itu/tadi" : compare without explicit omzet keyword
         $isCompareBulan  = $isCompareIntent && str_contains($lowerMsg, 'bulan');
 
         if ($isCompareIntent && ($isOmzetKeyword || $isCompareBulan)) {
@@ -794,7 +794,7 @@ class AIOrchestrator
             ];
         }
 
-        // 6b. Booking detail — spesifik kode BOOK atau "detail booking"
+        // 6b. Booking detail : spesifik kode BOOK atau "detail booking"
         $isDetailIntent = str_contains($lowerMsg, 'detail booking')
             || str_contains($lowerMsg, 'info booking')
             || str_contains($lowerMsg, 'lihat booking')
@@ -995,7 +995,7 @@ class AIOrchestrator
             ];
         }
 
-        // 10. Appointment list — broad keyword, check for booking/antrean only after all above
+        // 10. Appointment list : broad keyword, check for booking/antrean only after all above
         if (str_contains($lowerMsg, 'booking') || str_contains($lowerMsg, 'antrean')
             || str_contains($lowerMsg, 'antrian') || str_contains($lowerMsg, 'jadwal pasien')
             || str_contains($lowerMsg, 'daftar pasien')) {
@@ -1144,9 +1144,9 @@ class AIOrchestrator
             foreach ($owners as $o) {
                 if (!empty($o['pets'])) {
                     $petList = implode(', ', $o['pets']);
-                    $replies[] = "• 👤 <strong>{$o['nama']}</strong> (Telp: " . ($o['telepon'] ?? '-') . ") — Hewan: 🐾 <em>{$petList}</em>";
+                    $replies[] = "• 👤 <strong>{$o['nama']}</strong> (Telp: " . ($o['telepon'] ?? '-') . ") | Hewan: 🐾 <em>{$petList}</em>";
                 } else {
-                    $replies[] = "• 👤 <strong>{$o['nama']}</strong> (Telp: " . ($o['telepon'] ?? '-') . ") — Alamat: " . ($o['alamat'] ?? '-');
+                    $replies[] = "• 👤 <strong>{$o['nama']}</strong> (Telp: " . ($o['telepon'] ?? '-') . ") | Alamat: " . ($o['alamat'] ?? '-');
                 }
                 $cards[] = [
                     'title'       => "Owner: {$o['nama']}",
@@ -1220,7 +1220,7 @@ class AIOrchestrator
             $replies = [];
             $cards   = [];
             foreach ($staff as $s) {
-                $replies[] = "- <strong>{$s['name']}</strong> ({$s['role']}) — {$s['booking_count']} booking pada {$date}";
+                $replies[] = "- <strong>{$s['name']}</strong> ({$s['role']}) : {$s['booking_count']} booking pada {$date}";
                 $cards[]   = [
                     'title'       => $s['name'],
                     'subtitle'    => "Role: {$s['role']} | Email: {$s['email']} | Booking hari ini: {$s['booking_count']}",
@@ -1274,9 +1274,9 @@ class AIOrchestrator
             $replies = [];
             $cards   = [];
             foreach ($items as $item) {
-                $replies[] = "- <strong>[{$item['kode_booking']}]</strong> {$item['owner']} / {$item['hewan']} — <strong>{$item['nama_barang']}</strong> x{$item['jumlah']} = <strong>{$item['total_formatted']}</strong> ({$item['tanggal']})";
+                $replies[] = "- <strong>[{$item['kode_booking']}]</strong> {$item['owner']} / {$item['hewan']} : <strong>{$item['nama_barang']}</strong> x{$item['jumlah']} = <strong>{$item['total_formatted']}</strong> ({$item['tanggal']})";
                 $cards[]   = [
-                    'title'       => "{$item['nama_barang']} — {$item['total_formatted']}",
+                    'title'       => "{$item['nama_barang']} ({$item['total_formatted']})",
                     'subtitle'    => "Booking: {$item['kode_booking']} | Owner: {$item['owner']} | Hewan: {$item['hewan']} | Qty: {$item['jumlah']} | Tgl: {$item['tanggal']}",
                     'badge'       => 'Pengambilan Obat',
                     'badge_class' => 'bg-secondary',
@@ -1285,7 +1285,7 @@ class AIOrchestrator
             }
             $totalNilai = $data['total_nilai_formatted'] ?? '-';
             return [
-                'reply'        => "<strong>Catatan Pengambilan Obat</strong> ({$period}) — Total Nilai: <strong>{$totalNilai}</strong>:<br>" . implode('<br>', $replies),
+                'reply'        => "<strong>Catatan Pengambilan Obat</strong> ({$period}) : Total Nilai: <strong>{$totalNilai}</strong>:<br>" . implode('<br>', $replies),
                 'results'      => $cards,
                 'action_url'   => route('booking-uncompleted'),
                 'action_label' => 'Buka Manajemen Booking',
@@ -1409,14 +1409,14 @@ class AIOrchestrator
             foreach ($records as $r) {
                 $vital = $r['tanda_vital'] ?? [];
                 $soap  = $r['soap']        ?? [];
-                $replies[] = "<strong>[{$r['kode_booking']}] {$r['hewan']} ({$r['jenis_hewan']}) — {$r['tanggal']}</strong><br>"
+                $replies[] = "<strong>[{$r['kode_booking']}] {$r['hewan']} ({$r['jenis_hewan']}) : {$r['tanggal']}</strong><br>"
                            . "&nbsp;&nbsp;Dokter: {$r['dokter']}<br>"
                            . "&nbsp;&nbsp;Vital: Suhu {$vital['suhu_tubuh']} | Denyut {$vital['denyut_jantung']} | BB {$vital['berat']}<br>"
                            . "&nbsp;&nbsp;S: " . ($soap['subjective'] !== '-' ? $soap['subjective'] : '-') . "<br>"
                            . "&nbsp;&nbsp;A: <strong>" . ($soap['assessment'] !== '-' ? $soap['assessment'] : 'Belum diisi') . "</strong><br>"
                            . "&nbsp;&nbsp;P: " . ($soap['plan']       !== '-' ? $soap['plan']       : '-');
                 $cards[] = [
-                    'title'       => "[{$r['kode_booking']}] {$r['hewan']} — {$r['tanggal']}",
+                    'title'       => "[{$r['kode_booking']}] {$r['hewan']} ({$r['tanggal']})",
                     'subtitle'    => "Diagnosa: " . ($soap['assessment'] ?: '-') . " | Dokter: {$r['dokter']}",
                     'badge'       => 'Rekam Medis',
                     'badge_class' => 'bg-info text-dark',
@@ -1432,7 +1432,7 @@ class AIOrchestrator
             ];
         }
 
-        // Generic fallback — should not happen for known tools
+        // Generic fallback : should not happen for known tools
         return ['reply' => 'Data berhasil diambil namun format tidak dikenali.', 'results' => []];
     }
 }
