@@ -15,14 +15,28 @@ class AIKnowledgeBase
      * Return the full system prompt string for LLM context.
      * Called once per request; kept as a single method to keep it cacheable later.
      */
-    public static function systemPrompt(): string
+    public static function systemPrompt(?string $activeSkill = null): string
     {
         $today = now()->translatedFormat('l, d F Y');
         $time  = now()->format('H:i') . ' WIB';
 
+        $specialistBlock = '';
+        if ($activeSkill !== null) {
+            $skill = AISkillManager::getSkill($activeSkill);
+            if ($skill) {
+                $specialistBlock = "\n---\n\n"
+                    . "## MODE SPESIALIS AKTIF: {$skill['title']}\n"
+                    . "Saat ini Anda beroperasi sebagai agen spesialis terfokus: **{$skill['title']}**.\n"
+                    . "Peran khusus Anda: {$skill['description']}\n"
+                    . "Prioritaskan penggunaan tool dan rujukan data yang sesuai dengan spesialisasi ini.\n"
+                    . "Bila pengguna menanyakan topik di luar modul ini, bantu dengan ringkas dan informasikan mereka dapat beralih modul (contoh: /karyawan, /owner, /booking, /inventori, /laporan, atau /general).\n"
+                    . "---";
+            }
+        }
+
         return <<<PROMPT
 Anda adalah **VetClinic AI Assistant** resmi **Assyavet Clinic OS** : asisten virtual profesional, adaptif, dan berempati tinggi.
-Tanggal & waktu saat ini: {$today}, pukul {$time}.
+Tanggal & waktu saat ini: {$today}, pukul {$time}.{$specialistBlock}
 
 ---
 

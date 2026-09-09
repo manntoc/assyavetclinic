@@ -67,10 +67,10 @@ class AIKnowledgeDocs
     ];
 
     /**
-     * Get relevant doc(s) based on user query, scored by keyword hits.
+     * Get relevant doc(s) based on user query, scored by keyword hits and active skill.
      * Returns up to $limit top-scoring docs concatenated.
      */
-    public static function getRelevantDocs(string $query, int $limit = 3): string
+    public static function getRelevantDocs(string $query, int $limit = 3, ?string $activeSkill = null): string
     {
         $lower  = strtolower($query);
         $scores = [];
@@ -85,6 +85,16 @@ class AIKnowledgeDocs
             }
             if ($score > 0) {
                 $scores[$docKey] = $score;
+            }
+        }
+
+        // Boost docs matching the active specialist skill
+        if ($activeSkill !== null) {
+            $skill = AISkillManager::getSkill($activeSkill);
+            if ($skill && !empty($skill['docs'])) {
+                foreach ($skill['docs'] as $docKey) {
+                    $scores[$docKey] = ($scores[$docKey] ?? 0) + 15;
+                }
             }
         }
 

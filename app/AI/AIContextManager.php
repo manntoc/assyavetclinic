@@ -93,13 +93,40 @@ class AIContextManager
     }
 
     /**
-     * Reset context data to empty array.
+     * Reset context data to empty array (optionally preserving active_skill).
      */
-    public function resetContextData(): void
+    public function resetContextData(bool $preserveSkill = true): void
     {
         if ($this->conversation) {
-            $this->conversation->update(['context_data' => [], 'state' => AIStateMachine::IDLE]);
+            $skill = $preserveSkill ? $this->getActiveSkill() : null;
+            $newContext = $skill ? ['active_skill' => $skill] : [];
+            $this->conversation->update(['context_data' => $newContext, 'state' => AIStateMachine::IDLE]);
         }
+    }
+
+    /**
+     * Get the active modular skill / agent mode if any.
+     */
+    public function getActiveSkill(): ?string
+    {
+        if (!$this->conversation) return null;
+        $context = $this->conversation->context_data ?? [];
+        return $context['active_skill'] ?? null;
+    }
+
+    /**
+     * Set or clear the active modular skill / agent mode.
+     */
+    public function setActiveSkill(?string $skill): void
+    {
+        if (!$this->conversation) return;
+        $context = $this->conversation->context_data ?? [];
+        if ($skill === null || $skill === 'general' || $skill === '') {
+            unset($context['active_skill']);
+        } else {
+            $context['active_skill'] = strtolower(trim($skill));
+        }
+        $this->conversation->update(['context_data' => $context]);
     }
 
     /**

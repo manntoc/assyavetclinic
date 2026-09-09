@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Exception;
 use App\AI\AIKnowledgeBase;
 use App\AI\AIKnowledgeDocs;
+use App\AI\AISkillManager;
 
 class AIOrchestrator
 {
@@ -49,12 +50,47 @@ class AIOrchestrator
      */
     public function processMessage(string $userMsg, ?User $user, ?int $conversationId = null): array
     {
-        // 1. Normalize typos & synonyms first
-        $normalizedMsg = $this->normalizeTyposAndSynonyms($userMsg);
-
-        // Get/Create conversation & context
+        // 1. Get/Create conversation & context
         $conversation = $this->contextManager->getOrCreateConversation($user, $conversationId);
-        $this->contextManager->addMessage('user', $userMsg);
+
+        // 2. Check Slash Commands (/karyawan, /owner, /booking, /emr, /inventori, /laporan, /layanan, /general, /help, /skills)
+        $cmdParsed = AISkillManager::parseCommand($userMsg);
+        if ($cmdParsed['is_command']) {
+            $this->contextManager->addMessage('user', $userMsg);
+
+            if ($cmdParsed['action'] === 'reset') {
+                $this->contextManager->setActiveSkill(null);
+                $this->contextManager->resetContextData(false);
+                $resp = AISkillManager::buildResetResponse($conversation->id);
+                $this->contextManager->addMessage('assistant', $resp['reply']);
+                return $this->wrapResponseWithSkill($resp);
+            }
+
+            if ($cmdParsed['action'] === 'help') {
+                $resp = AISkillManager::buildHelpResponse($conversation->id);
+                $this->contextManager->addMessage('assistant', $resp['reply']);
+                return $this->wrapResponseWithSkill($resp);
+            }
+
+            if ($cmdParsed['action'] === 'switch' && $cmdParsed['skill']) {
+                $skill = $cmdParsed['skill'];
+                $this->contextManager->setActiveSkill($skill['key']);
+
+                if (empty($cmdParsed['remainder'])) {
+                    $resp = AISkillManager::buildSwitchResponse($skill, $conversation->id);
+                    $this->contextManager->addMessage('assistant', $resp['reply']);
+                    return $this->wrapResponseWithSkill($resp);
+                }
+
+                // If user entered command with query (e.g. "/karyawan siapa dokter jaga?")
+                $userMsg = $cmdParsed['remainder'];
+            }
+        } else {
+            $this->contextManager->addMessage('user', $userMsg);
+        }
+
+        // 3. Normalize typos & synonyms
+        $normalizedMsg = $this->normalizeTyposAndSynonyms($userMsg);
 
         // Entity Memory: extract entities from user message → store in context_data['entities']
         $this->contextManager->extractAndStoreEntities($userMsg);
@@ -84,12 +120,12 @@ class AIOrchestrator
                         }
 
                         $this->contextManager->addMessage('assistant', $reply);
-                        return [
+                        return $this->wrapResponseWithSkill([
                             'status'          => 'success',
                             'reply'           => $reply,
                             'conversation_id' => $conversation->id,
                             'state'           => AIStateMachine::COMPLETED,
-                        ];
+                        ]);
                     }
                 }
             } elseif ($this->isConfirmationNegative($lowerMsg)) {
@@ -97,12 +133,12 @@ class AIOrchestrator
                 $this->contextManager->resetContextData();
                 $reply = "Tindakan telah dibatalkan atas permintaan Anda.";
                 $this->contextManager->addMessage('assistant', $reply);
-                return [
+                return $this->wrapResponseWithSkill([
                     'status'          => 'success',
                     'reply'           => $reply,
                     'conversation_id' => $conversation->id,
                     'state'           => AIStateMachine::IDLE,
-                ];
+                ]);
             }
         }
 
@@ -119,12 +155,12 @@ class AIOrchestrator
                     $this->contextManager->resetContextData();
                     $reply = "Pencarian dibatalkan. Silakan tanyakan hal lain yang Anda butuhkan.";
                     $this->contextManager->addMessage('assistant', $reply);
-                    return [
+                    return $this->wrapResponseWithSkill([
                         'status'          => 'success',
                         'reply'           => $reply,
                         'conversation_id' => $conversation->id,
                         'state'           => AIStateMachine::IDLE,
-                    ];
+                    ]);
                 }
 
                 // Check if user is greeting or switched topic to a different domain
@@ -281,12 +317,12 @@ class AIOrchestrator
                    . "- Tarif layanan & laporan omzet<br>"
                    . "Silakan ketik pertanyaan Anda!";
             $this->contextManager->addMessage('assistant', $reply);
-            return [
+            return $this->wrapResponseWithSkill([
                 'status'          => 'success',
                 'reply'           => $reply,
                 'conversation_id' => $conversation->id,
                 'state'           => AIStateMachine::IDLE,
-            ];
+            ]);
         }
 
         // 4. Intent Classification & Query Rewriting (Model 1 : Router)
@@ -310,23 +346,24 @@ class AIOrchestrator
             ];
             $reply = $chitchatReplies[array_rand($chitchatReplies)];
             $this->contextManager->addMessage('assistant', $reply);
-            return [
+            return $this->wrapResponseWithSkill([
                 'status'          => 'success',
                 'reply'           => $reply,
                 'conversation_id' => $conversation->id,
                 'state'           => AIStateMachine::IDLE,
-            ];
+            ]);
         }
 
         $effectiveLower = trim(preg_replace('/[^\w\s]/u', '', strtolower($effectiveMsg)));
+        $activeSkill    = $this->contextManager->getActiveSkill();
 
         // 5a. RAG_DOCS intent : skip DB tool resolver, route directly to LLM
         //     (system_manual content injected via LLM fallback below; no tool needed)
         $resolvedToolIntent = null;
-        if ($intent === QueryRewriterService::INTENT_DB) {
+        if ($intent === QueryRewriterService::INTENT_DB || $activeSkill !== null) {
             // 5b. DB_SEARCH intent : Local NLU Tool Resolver
-            // Order matters: most specific first, broad keywords last.
-            $resolvedToolIntent = $this->resolveLocalToolIntent($effectiveMsg, $effectiveLower);
+            // Order matters: specialist mode fast paths first, most specific first, broad keywords last.
+            $resolvedToolIntent = $this->resolveLocalToolIntent($effectiveMsg, $effectiveLower, $activeSkill);
         }
 
         if ($resolvedToolIntent !== null) {
@@ -341,7 +378,7 @@ class AIOrchestrator
                 ]);
 
                 $this->contextManager->addMessage('assistant', $resolvedToolIntent['reply']);
-                return [
+                return $this->wrapResponseWithSkill([
                     'status'          => 'success',
                     'reply'           => $resolvedToolIntent['reply'],
                     'suggestions'     => $resolvedToolIntent['suggestions'] ?? [],
@@ -349,7 +386,7 @@ class AIOrchestrator
                     'action_label'    => $resolvedToolIntent['action_label'] ?? null,
                     'conversation_id' => $conversation->id,
                     'state'           => AIStateMachine::COLLECTING_DATA,
-                ];
+                ]);
             }
 
             $toolObj = $this->toolRegistry->getTool($resolvedToolIntent['tool_name']);
@@ -372,12 +409,12 @@ class AIOrchestrator
                             . "Ketik <strong>'Ya'</strong> untuk menyetujui atau <strong>'Batal'</strong> untuk membatalkan.";
 
                     $this->contextManager->addMessage('assistant', $reply);
-                    return [
+                    return $this->wrapResponseWithSkill([
                         'status'          => 'success',
                         'reply'           => $reply,
                         'conversation_id' => $conversation->id,
                         'state'           => AIStateMachine::WAITING_CONFIRMATION,
-                    ];
+                    ]);
                 }
 
                 // Read-only tool: execute directly
@@ -411,11 +448,11 @@ class AIOrchestrator
                     }
                 }
 
-                return array_merge([
+                return $this->wrapResponseWithSkill(array_merge([
                     'status'          => 'success',
                     'conversation_id' => $conversation->id,
                     'state'           => AIStateMachine::COMPLETED,
-                ], $formattedReply);
+                ], $formattedReply));
             }
         }
 
@@ -438,7 +475,7 @@ class AIOrchestrator
                     }
                 }
 
-                $systemPrompt = AIKnowledgeBase::systemPrompt();
+                $systemPrompt = AIKnowledgeBase::systemPrompt($activeSkill);
 
                 // History without last user turn (embedded in runtimeMessage)
                 $historyWithoutLast = $history;
@@ -448,9 +485,9 @@ class AIOrchestrator
                 $liveDataContext = '';
                 $manualContent   = '';
 
-                if ($intent === QueryRewriterService::INTENT_RAG) {
+                if ($intent === QueryRewriterService::INTENT_RAG || $activeSkill !== null) {
                     // RAG_DOCS: inject matching SOP docs from internal knowledge base
-                    $manualContent = AIKnowledgeDocs::getRelevantDocs($effectiveMsg);
+                    $manualContent = AIKnowledgeDocs::getRelevantDocs($effectiveMsg, 3, $activeSkill);
                     // Append entity context as supplemental session data if present
                     $entityCtx = $this->contextManager->getEntityContext();
                     if ($entityCtx) {
@@ -483,12 +520,12 @@ class AIOrchestrator
                 if (isset($llmResponse['choices'][0]['message']['content'])) {
                     $reply = nl2br(e($llmResponse['choices'][0]['message']['content']));
                     $this->contextManager->addMessage('assistant', $reply);
-                    return [
+                    return $this->wrapResponseWithSkill([
                         'status'          => 'success',
                         'reply'           => $reply,
                         'conversation_id' => $conversation->id,
                         'state'           => AIStateMachine::COMPLETED,
-                    ];
+                    ]);
                 }
             } catch (Exception $e) {
                 Log::warning('LLM Orchestrator Warning: ' . $e->getMessage());
@@ -507,7 +544,12 @@ class AIOrchestrator
             && !str_contains($lowerMsg, 'karyawan')
             && !str_contains($lowerMsg, 'laporan');
 
-        if ($isAmbiguous) {
+        if ($activeSkill) {
+            $skillMeta = AISkillManager::getSkill($activeSkill);
+            $title = $skillMeta['title'] ?? 'Spesialis';
+            $fallbackText = "Halo! Anda sedang berada di mode <strong>{$title}</strong>.<br>"
+                          . "Silakan ajukan pertanyaan terkait modul ini atau gunakan <strong>/general</strong> untuk kembali ke mode asisten umum.";
+        } elseif ($isAmbiguous) {
             $fallbackText = "Boleh saya bantu lebih lanjut? 😊<br>"
                           . "Maksud Anda terkait <strong>data owner/hewan</strong>, <strong>booking/antrean</strong>, <strong>stok obat</strong>, atau <strong>laporan omzet</strong>?";
         } else {
@@ -518,12 +560,12 @@ class AIOrchestrator
 
         $this->contextManager->addMessage('assistant', $fallbackText);
 
-        return [
+        return $this->wrapResponseWithSkill([
             'status'          => 'success',
             'reply'           => $fallbackText,
             'conversation_id' => $conversation->id,
             'state'           => AIStateMachine::IDLE,
-        ];
+        ]);
     }
 
     /**
@@ -634,7 +676,7 @@ class AIOrchestrator
      *  5. Owner search
      *  6. Appointment list (broad : booking/antrean keyword)
      */
-    protected function resolveLocalToolIntent(string $rawMsg, string $lowerMsg): ?array
+    protected function resolveLocalToolIntent(string $rawMsg, string $lowerMsg, ?string $activeSkill = null): ?array
     {
         // 1. Create appointment : most specific, requires "buat/tambah/bikin/daftar" + booking intent
         // Exclude informational queries: "alur", "step", "cara", "bagaimana", "proses", "tahap"
@@ -670,6 +712,14 @@ class AIOrchestrator
                 'tool_name'  => 'create_appointment',
                 'parameters' => ['owner' => $owner, 'pet' => $pet, 'date' => $date],
             ];
+        }
+
+        // Domain-specific fast path when a modular specialist skill is active
+        if (!$isInfoQuery && !empty($activeSkill)) {
+            $specialistIntent = $this->resolveSpecialistIntent($rawMsg, $lowerMsg, $activeSkill);
+            if ($specialistIntent !== null) {
+                return $specialistIntent;
+            }
         }
 
         // 2a. Compare omzet : MUST come before get_omzet_report (also matches 'omzet')
@@ -1226,13 +1276,13 @@ class AIOrchestrator
                     'subtitle'    => "Role: {$s['role']} | Email: {$s['email']} | Booking hari ini: {$s['booking_count']}",
                     'badge'       => $s['role'],
                     'badge_class' => 'bg-info text-dark',
-                    'url'         => route('karyawan-admin'),
+                    'url'         => route('karyawan'),
                 ];
             }
             return [
                 'reply'        => "<strong>Daftar Karyawan & Dokter</strong> (per {$date}):<br>" . implode('<br>', $replies),
                 'results'      => $cards,
-                'action_url'   => route('karyawan-admin'),
+                'action_url'   => route('karyawan'),
                 'action_label' => 'Buka Manajemen Karyawan',
             ];
         }
@@ -1253,14 +1303,14 @@ class AIOrchestrator
                         'subtitle'    => "Jenis: {$item['jenis']} | Harga: {$item['harga_formatted']}",
                         'badge'       => $item['jenis'],
                         'badge_class' => 'bg-primary',
-                        'url'         => route('layanan-admin'),
+                        'url'         => route('layanan'),
                     ];
                 }
             }
             return [
                 'reply'        => "<strong>Tarif Layanan Klinik</strong> ({$data['total']} layanan):<br>" . implode('<br>', $replies),
                 'results'      => $cards,
-                'action_url'   => route('layanan-admin'),
+                'action_url'   => route('layanan'),
                 'action_label' => 'Buka Manajemen Layanan',
             ];
         }
@@ -1434,5 +1484,124 @@ class AIOrchestrator
 
         // Generic fallback : should not happen for known tools
         return ['reply' => 'Data berhasil diambil namun format tidak dikenali.', 'results' => []];
+    }
+
+    /**
+     * Domain-specific fast path intent resolution when a specialist skill mode is active.
+     */
+    protected function resolveSpecialistIntent(string $rawMsg, string $lowerMsg, string $activeSkill): ?array
+    {
+        switch ($activeSkill) {
+            case 'karyawan':
+                $date = date('Y-m-d');
+                if (preg_match('/(\d{4}-\d{2}-\d{2})/', $rawMsg, $m)) {
+                    $date = $m[1];
+                }
+                $clean = trim(preg_replace('/^(?:siapa|daftar|cek|lihat|jadwal|staf|staff|dokter|karyawan|yang jaga|jaga|bertugas|hari ini)\s+/ui', '', $rawMsg));
+                $clean = trim(preg_replace('/\b(?:hari ini|dokter|staf|staff|karyawan|jaga)\b/ui', '', $clean));
+                return [
+                    'tool_name'  => 'get_staff',
+                    'parameters' => [
+                        'query' => $clean,
+                        'date'  => $date,
+                    ],
+                ];
+
+            case 'owner':
+                $clean = trim(preg_replace('/^(?:cari|lihat|cek|data|profil|informasi|tentang)\s+/ui', '', $rawMsg));
+                return [
+                    'tool_name'  => 'search_owner',
+                    'parameters' => ['query' => $clean ?: $rawMsg],
+                ];
+
+            case 'inventori':
+                $clean = trim(preg_replace('/^(?:cek|lihat|cari|stok|obat|ketersediaan|harga)\s+/ui', '', $rawMsg));
+                $clean = trim(preg_replace('/\b(?:stok|obat)\b/ui', '', $clean));
+                return [
+                    'tool_name'  => 'search_inventory',
+                    'parameters' => ['query' => $clean ?: $rawMsg],
+                ];
+
+            case 'emr':
+                $kode = '';
+                if (preg_match('/\b(BOOK[A-Z0-9]{5,})\b/i', $rawMsg, $m)) {
+                    $kode = strtoupper($m[1]);
+                }
+                $clean = trim(preg_replace('/^(?:rekam medis|emr|soap|diagnosa|riwayat|pasien)\s+/ui', '', $rawMsg));
+                return [
+                    'tool_name'  => 'get_emr',
+                    'parameters' => [
+                        'pet'          => $clean,
+                        'kode_booking' => $kode,
+                    ],
+                ];
+
+            case 'booking':
+                if (str_contains($lowerMsg, 'hari ini') || str_contains($lowerMsg, 'sekarang') || str_contains($lowerMsg, 'antrean')) {
+                    return ['tool_name' => 'get_today_appointments', 'parameters' => []];
+                }
+                $date = date('Y-m-d');
+                if (preg_match('/(\d{4}-\d{2}-\d{2})/', $rawMsg, $m)) {
+                    $date = $m[1];
+                }
+                return [
+                    'tool_name'  => 'get_appointments',
+                    'parameters' => ['date' => $date],
+                ];
+
+            case 'laporan':
+                if (str_contains($lowerMsg, 'bandingkan') || str_contains($lowerMsg, 'dibanding') || str_contains($lowerMsg, ' vs ')) {
+                    $months = $this->extractMonthsFromMessage($rawMsg);
+                    return [
+                        'tool_name'  => 'compare_omzet',
+                        'parameters' => [
+                            'period_a' => $months[0] ?? 'last_month',
+                            'period_b' => $months[1] ?? 'this_month',
+                        ],
+                    ];
+                }
+                $period = 'this_month';
+                if (str_contains($lowerMsg, 'hari ini')) $period = 'today';
+                elseif (str_contains($lowerMsg, 'bulan lalu')) $period = 'last_month';
+                return [
+                    'tool_name'  => 'get_omzet_report',
+                    'parameters' => ['period' => $period],
+                ];
+
+            case 'layanan':
+                $clean = trim(preg_replace('/^(?:tarif|biaya|harga|layanan|jasa|cek|cari)\s+/ui', '', $rawMsg));
+                return [
+                    'tool_name'  => 'search_layanan',
+                    'parameters' => ['query' => $clean],
+                ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Wrap orchestrator response with active modular skill metadata.
+     */
+    protected function wrapResponseWithSkill(array $response): array
+    {
+        $activeSkillKey = $this->contextManager->getActiveSkill();
+        if ($activeSkillKey) {
+            $skillMeta = AISkillManager::getSkill($activeSkillKey);
+            $response['active_skill'] = $activeSkillKey;
+            $response['skill_title']  = $skillMeta['title'] ?? ucfirst($activeSkillKey);
+            $response['skill_color']  = $skillMeta['color'] ?? '#2d8aba';
+            $response['skill_badge']  = $skillMeta['badge_class'] ?? 'bg-primary';
+
+            if (empty($response['suggestions']) && !empty($skillMeta['quick_chips'])) {
+                $response['suggestions'] = $skillMeta['quick_chips'];
+            }
+        } else {
+            $response['active_skill'] = null;
+            $response['skill_title']  = null;
+            $response['skill_color']  = null;
+            $response['skill_badge']  = null;
+        }
+
+        return $response;
     }
 }
