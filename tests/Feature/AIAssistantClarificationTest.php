@@ -18,6 +18,7 @@ class AIAssistantClarificationTest extends BaseTestCase
     {
         parent::setUp();
         $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
         $this->user = User::first();
         if ($this->user) {
             AIConversation::where('user_id', $this->user->id)
