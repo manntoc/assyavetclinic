@@ -152,6 +152,11 @@
                 </li>
             </ul>
             <ul class="top-navbar-area navbar-nav navbar-nav-right">
+                <li class="nav-item dropdown dropdown-animate mr-2">
+                    <a href="{{ route('dashboard-user') }}" class="badge badge-info d-none d-md-block" style="background-color: #2d8aba; color: #ffffff; padding: 6px 12px; font-weight: 600;">
+                        <i class="fas fa-hospital-alt mr-1"></i> Dashboard Klinik
+                    </a>
+                </li>
                 <li  class="nav-item dropdown dropdown-animate">
                     <a href="{{ url('/') }}" class="badge badge-primary d-none d-md-block">
                         {{ __('content.site') }}
@@ -255,6 +260,12 @@
         <!-- Side Menu area -->
         <nav class="sidebar sidebar-offcanvas" id="sidebar">
             <ul class="nav">
+                <li class="nav-item mb-2" style="background: rgba(45, 138, 186, 0.08); border-radius: 8px;">
+                    <a class="nav-link" href="{{ route('dashboard-user') }}" style="color: #2d8aba; font-weight: 700;">
+                        <i class="fas fa-arrow-left menu-icon" style="color: #2d8aba;"></i>
+                        <span class="menu-title" style="color: #2d8aba;">Ke Dashboard Klinik</span>
+                    </a>
+                </li>
                 <li class="nav-item {{ (request()->is('dashboard')) ? 'active' : '' }}">
                     <a class="nav-link" href="{{ url('dashboard') }}">
                         <i class="fas fa-th-large menu-icon"></i>
@@ -757,6 +768,8 @@
 <!-- Icon Picker JS -->
 <script src="{{ asset('assets/admin/side_menu/vendor/fontawesome-free/js/fontawesome-iconpicker.min.js') }}"> </script>
 
+    <!-- FLOATING AI ASSISTANT WIDGET -->
+    @include('components.ai_assistant')
 </body>
 
 </html>

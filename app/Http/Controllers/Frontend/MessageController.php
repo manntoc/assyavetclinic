@@ -36,7 +36,7 @@ class MessageController extends Controller
         ]);
 
         return redirect()->to('/'.'#contact')
-            ->with('success', 'frontend.your_message_has_been_delivered');
+            ->with('success', 'Pesan Anda Telah Berhasil Dikirim');
     }
 
 }

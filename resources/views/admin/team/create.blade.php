@@ -242,13 +242,13 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="link_2">Facebook</label>
+                                    <label for="link_2">Email</label>
                                     <input type="text" name="link_2" class="form-control" id="link_2">
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                           <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="link_3">Twitter</label>
+                                    <label for="link_3">Kosongi Saja</label>
                                     <input type="text" name="link_3" class="form-control" id="link_3">
                                 </div>
                             </div>

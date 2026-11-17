@@ -19,7 +19,7 @@ class Blog extends Model
      *
      * @return array
      */
-    public function sluggable()
+    public function sluggable(): array
     {
         return [
             'slug' => [
@@ -73,7 +73,6 @@ class Blog extends Model
 
     public function category()
     {
-        return $this->belongsTo('App\Models\Admin\Category','category_id','id');
+        return $this->belongsTo('App\Models\Admin\Category', 'category_id', 'id');
     }
-
 }

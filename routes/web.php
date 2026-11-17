@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\AIAssistantController;
+use App\Http\Controllers\EstimasiBiayaController;
+use App\Http\Controllers\LaporanOmzetController;
 use App\Http\Controllers\Admin\AboutController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminUserController;
@@ -53,7 +56,11 @@ use App\Http\Controllers\Admin\TestimonialSectionController;
 use App\Http\Controllers\Admin\VideoController;
 use App\Http\Controllers\Admin\WorkProcessController;
 use App\Http\Controllers\Admin\WorkProcessSectionController;
+use App\Http\Controllers\AllController;
 use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\FunctionController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\OwnerController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -72,6 +79,10 @@ use Illuminate\Support\Facades\Route;
 
 
 // Start Site Frontend Route
+
+//loginuser
+Route::get('loginuser', [LoginController::class, 'index'])->name('loginuser');
+
 Route::get('/', [HomeController::class, 'index'])->name('homepage')->middleware('XSS');
 
 Route::post('subscribe', [\App\Http\Controllers\Frontend\SubscribeController::class, 'store'])
@@ -291,7 +302,6 @@ Route::middleware(['auth:sanctum', 'verified', 'XSS', 'permission:portfolio chec
     Route::put('portfolio-detail/{id}', [PortfolioDetailController::class, 'update'])->name('portfolio-detail.update');
     Route::delete('portfolio-detail/{id}', [PortfolioDetailController::class, 'destroy'])->name('portfolio-detail.destroy');
     Route::delete('portfolio-detail-checked/{id}', [PortfolioDetailController::class, 'destroy_checked'])->name('portfolio-detail.destroy_checked');
-
 });
 
 Route::middleware(['auth:sanctum', 'verified', 'XSS', 'permission:teams check'])->prefix('admin')->group(function () {
@@ -489,30 +499,143 @@ Route::middleware(['auth:sanctum', 'verified', 'XSS', 'permission:language check
         ->name('frontend-keyword.store_frontend_keyword');
     Route::put('frontend-keyword', [LanguageKeywordController::class, 'update_frontend_keyword'])
         ->name('frontend-keyword.update_frontend_keyword');
-
-
 });
 
 Route::middleware(['auth:sanctum', 'verified', 'XSS', 'permission:clear cache check'])->prefix('admin')->group(function () {
-    Route::get('clear-cache', function() {
+    Route::get('clear-cache', function () {
         Artisan::call('cache:clear');
         Artisan::call('route:clear');
         Artisan::call('config:clear');
         Artisan::call('view:clear');
         return redirect()->route('dashboard')
-            ->with('success','content.created_successfully');
+            ->with('success', 'content.created_successfully');
     });
 });
 
 Route::middleware(['XSS'])->group(function () {
-    Route::get('run-updater', function() {
+    Route::get('run-updater', function () {
         Artisan::call('migrate');
         return "The update is complete :)";
     });
 });
 
+//View Route
+Route::get('/dashboard-admin', [AllController::class, 'index'])->name('dashboard-user')->middleware('akses:admin|karyawan|superadmin');
+Route::get('/inventori-admin', [AllController::class, 'inventori'])->name('inventori')->middleware('akses:admin|karyawan|superadmin');
+Route::get('/karyawan-admin', [AllController::class, 'karyawan'])->name('karyawan')->middleware('akses:admin|superadmin');
+Route::get('/booking-uncompleted', [AllController::class, 'booking'])->name('booking-uncompleted')->middleware('akses:admin|karyawan|superadmin');
+Route::get('/booking-completed', [AllController::class, 'complete'])->name('booking-completed')->middleware('akses:admin|karyawan|superadmin');
+Route::get('/manajemen-stok', [AllController::class, 'manajemenstok'])->name('manajemen-stok')->middleware('akses:admin|karyawan|superadmin');
+Route::get('/layanan-admin', [AllController::class, 'layanan'])->name('layanan')->middleware('akses:admin|superadmin');
+Route::get('/pekerjaan-saya', [AllController::class, 'pekerjaansaya'])->name('pekerjaansaya')->middleware('akses:admin|karyawan|superadmin');
+Route::get('/dashboard/search-booking', [AllController::class, 'searchBooking']);
+Route::get('/calendar/events', [AllController::class, 'events']);
+Route::get('/booking/create/{owner}/{pet}', [FunctionController::class,'createbook']);
+
+//function route
+Route::post('/calendar/update', [AllController::class, 'updateEvent']);
+Route::post('/store-book', [FunctionController::class, 'storebook'])->name('storebook')->middleware('auth');
+Route::post('/update-transaksi/{id}', [FunctionController::class, 'updatetransaksi'])->name('updatetransaksi')->middleware('akses:admin|karyawan|superadmin');
+Route::post('/store-akun-karyawan', [FunctionController::class, 'storeakunkaryawan'])->name('storeakunkaryawan')->middleware('akses:admin');;
+Route::post('/store-inventori', [FunctionController::class, 'storeinventori'])->name('storeinventori')->middleware('akses:admin');
+Route::post('/store-layanan', [FunctionController::class, 'storelayanan'])->name('storelayanan')->middleware('akses:admin');
+Route::post('/store-transaksi', [FunctionController::class, 'storetransaksi'])->name('storetransaksi')->middleware('akses:admin|karyawan|superadmin');
+Route::post('/updateakunkaryawan/{id}', [FunctionController::class, 'updateakunkaryawan'])->name('updateakunkaryawan')->middleware('akses:admin');
+Route::post('/update-pemesanan/{id}', [FunctionController::class, 'updatestatusbooking'])->name('updatestatusbooking')->middleware('akses:admin|karyawan|superadmin');
+Route::post('/booking/update-stage/{id}', [FunctionController::class, 'updateStage'])->name('booking.update-stage')->middleware('akses:admin|karyawan|superadmin');
+Route::get('/booking/pet-analytics/{id}', [FunctionController::class, 'getPetAnalytics'])->name('booking.pet-analytics')->middleware('akses:admin|karyawan|superadmin');
+Route::post('/update-inventori/{id}', [FunctionController::class, 'updateinventori'])->name('updateinventori')->middleware('akses:admin');
+Route::post('/update-layanan/{id}', [FunctionController::class, 'updatelayanan'])->name('updatelayanan')->middleware('akses:admin');
+Route::post('/updatetransaksi', [FunctionController::class, 'updatetransaksi'])->name('updatetransaksi');
+Route::delete('/deleteakunkaryawan/{id}', [FunctionController::class, 'deleteakunkaryawan'])->name('deleteakunkaryawan')->middleware('akses:admin');
+Route::delete('/deletebarang/{id}', [FunctionController::class, 'deleteinventori'])->name('deletebarang')->middleware('akses:admin');
+Route::delete('/deletelayanan/{id}', [FunctionController::class, 'deletelayanan'])->name('deletelayanan')->middleware('akses:admin');
+
+//extension
+Route::get('/export-pdf/{id}', [FunctionController::class, 'exportPDF'])->name('nota');
+Route::get('/delete-item/{id}', [FunctionController::class, 'deleteItem'])->name('delete-item');
+Route::post('/booking/pet-log/store', [FunctionController::class, 'storePetDailyLog'])->name('store-pet-log');
+Route::get('/booking/pet-log/delete/{id}', [FunctionController::class, 'destroyPetDailyLog'])->name('delete-pet-log');
+
+//customer management
+Route::get('/owner', [OwnerController::class, 'owner'])->name('owner')->middleware('akses:admin|superadmin');
+Route::get('/owner/tambah', [OwnerController::class, 'createowner'])->name('owner.create')->middleware('akses:admin|superadmin');
+Route::post('/store-owner', [OwnerController::class, 'storeowner'])->name('store.owner')->middleware('akses:admin|superadmin');
+Route::get('/owner/edit/{id}', [OwnerController::class, 'editowner'])->name('owner.edit')->middleware('akses:admin|superadmin');
+Route::post('/update-owner/{id}', [OwnerController::class, 'updateowner'])->name('owner.update')->middleware('akses:admin|superadmin');
+Route::get('/owner/show/{id}', [OwnerController::class, 'showowner'])->name('owner.show')->middleware('akses:admin|superadmin');
+Route::delete('/delete-owner/{id}', [OwnerController::class, 'deleteowner'])->name('owner.destroy')->middleware('akses:admin|superadmin');
+Route::delete('/delete-pet-owner/{id}', [OwnerController::class, 'deletepetowner'])->name('deletepetowner')->middleware('akses:admin|superadmin');
+
+
+
+// 9Router AI Integration Test Route
+Route::get('/test-9router', function (\App\Services\NineRouterService $nineRouter) {
+    $isHealthy = $nineRouter->checkHealth();
+    $models = $nineRouter->getModels();
+    
+    return response()->json([
+        'status'       => 'success',
+        'connected'    => $isHealthy,
+        'api_key'      => substr(config('services.ninerouter.api_key'), 0, 8) . '...',
+        'base_url'     => config('services.ninerouter.base_url'),
+        'models'       => $models,
+    ]);
+});
+
+// AI Assistant Route
+Route::post('/ai-assistant/chat', [AIAssistantController::class, 'chat'])
+    ->middleware(['auth', 'throttle:30,1'])
+    ->name('ai-assistant.chat');
+
+// Route Nota Estimasi Biaya (Perkiraan Harga, Non-billing, Zero Stock Mutation)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/estimasi-biaya', [EstimasiBiayaController::class, 'index'])->name('estimasi-biaya.index');
+    Route::get('/estimasi-biaya/create', [EstimasiBiayaController::class, 'create'])->name('estimasi-biaya.create');
+    Route::post('/estimasi-biaya', [EstimasiBiayaController::class, 'store'])->name('estimasi-biaya.store');
+    Route::get('/estimasi-biaya/{id}/edit', [EstimasiBiayaController::class, 'edit'])->name('estimasi-biaya.edit');
+    Route::put('/estimasi-biaya/{id}', [EstimasiBiayaController::class, 'update'])->name('estimasi-biaya.update');
+    Route::delete('/estimasi-biaya/{id}', [EstimasiBiayaController::class, 'destroy'])->name('estimasi-biaya.destroy');
+    Route::get('/estimasi-biaya/{id}/pdf', [EstimasiBiayaController::class, 'pdf'])->name('estimasi-biaya.pdf');
+});
+
+// Route Laporan Omzet Keuangan Detail
+Route::middleware(['auth'])->group(function () {
+    Route::get('/laporan-omzet', [LaporanOmzetController::class, 'index'])->name('laporan-omzet.index');
+    Route::get('/laporan-omzet/pdf', [LaporanOmzetController::class, 'exportPdf'])->name('laporan-omzet.pdf');
+});
+
+// Instagram Content Studio
+use App\Http\Controllers\InstagramContentController;
+
+Route::middleware(['auth', 'akses:admin|superadmin'])->prefix('instagram-studio')->name('instagram-studio.')->group(function () {
+    Route::get('/',                                  [InstagramContentController::class, 'index'])          ->name('index');
+    Route::get('/create',                            [InstagramContentController::class, 'create'])         ->name('create');
+    Route::post('/generate',                         [InstagramContentController::class, 'generate'])       ->name('generate');
+    Route::get('/{id}/preview',                      [InstagramContentController::class, 'preview'])        ->name('preview');
+    Route::put('/{id}/caption',                      [InstagramContentController::class, 'updateCaption'])  ->name('update-caption');
+    Route::post('/{id}/caption/regenerate',          [InstagramContentController::class, 'regenerateCaption'])->name('regenerate-caption');
+    Route::put('/{contentId}/slides/{slideId}',      [InstagramContentController::class, 'updateSlide'])    ->name('update-slide');
+    Route::post('/{contentId}/slides/{slideId}/regenerate', [InstagramContentController::class, 'regenerateSlide'])->name('regenerate-slide');
+    Route::get('/{contentId}/slides/{slideId}/canvas',    [InstagramContentController::class, 'renderSlideCanvas'])->name('slide-canvas');
+    Route::post('/{contentId}/slides/{slideId}/image', [InstagramContentController::class, 'uploadImage'])  ->name('upload-image');
+    Route::post('/{id}/slides/add',                  [InstagramContentController::class, 'addSlide'])       ->name('add-slide');
+    Route::delete('/{contentId}/slides/{slideId}',   [InstagramContentController::class, 'removeSlide'])    ->name('remove-slide');
+    Route::post('/{id}/slides/reorder',              [InstagramContentController::class, 'reorderSlides'])  ->name('reorder-slides');
+    Route::post('/{id}/generate-images',             [InstagramContentController::class, 'generateImages'])->name('generate-images');
+    Route::post('/{contentId}/slides/{slideId}/generate-image', [InstagramContentController::class, 'generateSlideImage'])->name('generate-slide-image');
+    Route::post('/{id}/draft',                       [InstagramContentController::class, 'saveDraft'])      ->name('save-draft');
+    Route::post('/{id}/review',                      [InstagramContentController::class, 'submitReview'])   ->name('submit-review');
+    Route::post('/{id}/approve',                     [InstagramContentController::class, 'approve'])        ->name('approve');
+    Route::post('/{id}/publish',                     [InstagramContentController::class, 'publish'])        ->name('publish');
+    Route::delete('/{id}',                           [InstagramContentController::class, 'destroy'])        ->name('destroy');
+    Route::post('/token/refresh',                    [InstagramContentController::class, 'refreshToken'])   ->name('token-refresh');
+});
+
+require __DIR__ . '/auth.php';
+
 Route::any('{catchall}', [ErrorPageController::class, 'not_found'])->where('catchall', '.*');
 
-
-
-
+Route::get('/privacy-policy', function () {
+    return view('privacy_policy');
+})->name('privacy.policy');

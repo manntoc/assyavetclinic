@@ -103,7 +103,7 @@
                                     </li>
                                 </ul>
                             </div>
-                            <div class="sidebar-widgets">
+                             {{-- <div class="sidebar-widgets">
                                 <div class="subscribe-newsletter">
                                     <div class="subscribe-newsletter-text">
                                         <div class="icon">
@@ -120,7 +120,7 @@
                                         </form>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                     </div>
                 </div>
             </div>

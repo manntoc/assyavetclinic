@@ -10,3 +10,30 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+
+# Large files & temporary
+node_modules.zip
+scratch/
+test_output.pdf
+test_pdf.pdf
+
+# Internal Documentation & AI development rules
+prd.md
+DEVELOPMENT_STANDARDS.md
+.agents/
+anti-slop/
+soul.md
+roster.json
+roster-backups/
+hive/
+referensi_layout/
+
+# Local tools & phpmyadmin
+public/phpmyadmin/
+
+# Framework cache & logs
+storage/framework/lsp*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*.log

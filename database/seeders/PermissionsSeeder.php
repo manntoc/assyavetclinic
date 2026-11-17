@@ -2,10 +2,12 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class PermissionsSeeder extends Seeder
@@ -99,5 +101,44 @@ class PermissionsSeeder extends Seeder
         ]);
         $user->assignRole($role3);
 
+        DB::table('users')->insert([
+            [
+                'name' => 'Bang Admin',
+                'email' => 'adminkita@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('Admin_1'), // It's better to use more secure passwords in production
+                'role' => 'admin',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+            [
+                'name' => 'Regular User',
+                'email' => 'fachry@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('Fachry_01'),
+                'role' => 'user',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+            [
+                'name' => 'Lukman',
+                'email' => 'lukman@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('Lukman_01'),
+                'role' => 'karyawan',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+            [
+                'name' => 'SuperAdmin',
+                'email' => 'bossbesar@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('SuperAdmin_01'), // It's better to use more secure passwords in production
+                'role' => 'superadmin',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+            // Add more users as needed
+        ]);
     }
 }

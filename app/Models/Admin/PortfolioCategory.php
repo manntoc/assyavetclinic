@@ -16,7 +16,7 @@ class PortfolioCategory extends Model
      *
      * @return array
      */
-    public function sluggable()
+    public function sluggable(): array
     {
         return [
             'portfolio_category_slug' => [

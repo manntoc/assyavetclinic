@@ -96,6 +96,7 @@ class AdminUserController extends Controller
             'password' => Hash::make($input['password']),
             'profile_photo_path' => $input['profile_photo_path'],
             'type' => 0,
+            'role' => 'admin',
         ]);
 
         $user->assignRole($role);

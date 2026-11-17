@@ -1,0 +1,520 @@
+{{--
+    slide_canvas.blade.php
+    ═══════════════════════════════════════════════════════════════════════════
+    Dynamic Layout Engine — Assyavet Instagram Studio
+    ═══════════════════════════════════════════════════════════════════════════
+
+    ARCHITECTURE:
+      Canvas
+        └─ Content Layer    (headline, body, image — varies per layout)
+        └─ Decorative Layer (shapes, doodles, blobs — varies per layout)
+        └─ Brand Layer      (logo + website — locked, from CMS, never hardcoded)
+              └─ brand_bar  (logo + slide counter)
+              └─ dot_bar    (slide dots + website URL)
+
+    LAYOUTS (10 variants):
+      1. hook_center       Cover: big headline, centered square photo
+      2. navy_full         Dark navy bg, white text, numbered list
+      3. white_top_blue    Top white (headline+photo), blue panel below w/ points
+      4. card_grid         2×2 info cards, clean white bg
+      5. split_reverse     Photo left 40%, text right 60%
+      6. blue_gradient     Sky→navy gradient, circle photo center
+      7. cta_full          CTA closing slide (last slide always)
+      8. editorial         Big number + editorial headline + photo strip
+      9. scrapbook         Sticky note / paper feel, doodle accents, playful
+     10. typography_hero   Huge text dominant, small supporting image bottom
+
+    BRAND LAYER:
+      - Logo from SiteImage CMS (aspect-ratio preserved, never stretched)
+      - Website URL from config/SiteInfo (never hardcoded)
+      - AI cannot override brand content, only layout/position variant
+    ═══════════════════════════════════════════════════════════════════════════
+--}}
+@php
+    use App\Services\Instagram\InstagramBrandResolver;
+
+    // ── Data ────────────────────────────────────────────────────────────────
+    $brand       = InstagramBrandResolver::resolve();
+    $purpose     = $slide->purpose     ?? 'hook';
+    $layout      = $slide->layout      ?? 'hook_center';
+    $hasImage    = !empty($slide->image_path) || !empty($slide->rendered_path);
+    $imageUrl    = $slide->image_url ?? null;
+    $totalSlides = $content->slides->count() ?: 3;
+    $slideNum    = $slide->slide_number ?? 1;
+    $headline    = $slide->headline ?? '';
+    $body        = $slide->body ?? '';
+
+    // ── Brand strings dari DB (TIDAK hardcode) ────────────────────────────
+    $clinicName  = $brand['clinic_name'] ?? '';
+    $websiteUrl  = $brand['website_url'] ?? '';
+
+    // ── CTA features: ambil dari layanan.jenis di DB (max 3, no hardcode) ─
+    static $ctaFeatures = null;
+    if ($ctaFeatures === null) {
+        try {
+            $jenisList = \App\Models\layanan::select('jenis')
+                ->distinct()
+                ->whereNotNull('jenis')
+                ->pluck('jenis')
+                ->take(3)
+                ->toArray();
+            // Icon mapping per jenis layanan
+            $iconMap = [
+                'vaksin'    => 'bi-shield-check',
+                'grooming'  => 'bi-scissors',
+                'operasi'   => 'bi-hospital',
+                'steril'    => 'bi-scissors',
+                'rawat'     => 'bi-house-medical',
+                'house'     => 'bi-house-heart',
+                'diagnosa'  => 'bi-clipboard2-pulse',
+                'jasa'      => 'bi-person-badge',
+                'lainnya'   => 'bi-stars',
+            ];
+            $ctaFeatures = array_map(function($j) use ($iconMap) {
+                $lower = strtolower($j);
+                $icon  = 'bi-stars'; // default
+                foreach ($iconMap as $keyword => $ico) {
+                    if (str_contains($lower, $keyword)) { $icon = $ico; break; }
+                }
+                return ['label' => $j, 'icon' => $icon];
+            }, $jenisList);
+        } catch (\Throwable $e) {
+            $ctaFeatures = []; // graceful fail
+        }
+    }
+
+    // ── hook_center badge label dari purpose ────────────────────────────────
+    $badgeLabel = match($purpose) {
+        'hook'      => 'Yuk Kita Bahas!',
+        'problem'   => 'Perlu Diketahui!',
+        'tips'      => 'Tips Berguna!',
+        'education' => 'Info Penting!',
+        default     => 'Selengkapnya →',
+    };
+
+    // ── Parse body → bullet points ─────────────────────────────────────────
+    $points = array_values(array_filter(
+        array_map('trim', preg_split('/[\r\n]+/', $body)),
+        fn($l) => strlen($l) > 0
+    ));
+    if (count($points) <= 1 && strlen($body) > 0) {
+        $points = array_values(array_filter(
+            array_map('trim', preg_split('/(?<=[.!?])\s+/', $body)),
+            fn($l) => strlen($l) > 3
+        ));
+    }
+    if (count($points) === 0) $points = $body ? [$body] : [''];
+
+    // ── Normalize layout — handle legacy values ───────────────────────────
+    $legacyMap = [
+        'hero'        => 'hook_center',
+        'text_focus'  => 'white_top_blue',
+        'split'       => 'split_reverse',
+        'case_study'  => 'navy_full',
+        'educational' => 'card_grid',
+        'minimal'     => 'typography_hero',
+        'magazine'    => 'editorial',
+        'scrapbook'   => 'scrapbook',
+        'collage'     => 'card_grid',
+    ];
+    if (isset($legacyMap[$layout])) $layout = $legacyMap[$layout];
+
+    $validLayouts = [
+        'hook_center','navy_full','white_top_blue','card_grid',
+        'split_reverse','blue_gradient','cta_full','editorial',
+        'scrapbook','typography_hero',
+    ];
+    if (!in_array($layout, $validLayouts)) $layout = 'hook_center';
+
+    // ── Brand layer override rules ───────────────────────────────────────
+    // Force cta_full HANYA dari purpose, bukan dari posisi slide.
+    // Posisi slide terakhir tidak otomatis CTA — user/AI yang menentukan purpose.
+    if ($purpose === 'cta') {
+        $layout = 'cta_full';
+    }
+@endphp
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 1: hook_center — Cover slide: big headline + centered photo         --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@if($layout === 'hook_center')
+<div class="ig-canvas ig-lyt-hook-center">
+    {{-- Decorative blobs --}}
+    <div class="ig-deco-blob ig-blob-tl"></div>
+    <div class="ig-deco-blob ig-blob-br"></div>
+
+    {{-- Brand Layer: Top --}}
+    @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer --}}
+    <div class="ig-hc-body">
+        <div class="ig-hc-badge">{{ $badgeLabel }}</div>
+        <div class="ig-hc-headline">{{ $headline }}</div>
+        <div class="ig-hc-photo-wrap">
+            @if($hasImage)
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            @else
+                @include('instagram_studio.partials.photo_placeholder')
+            @endif
+        </div>
+        @if(!empty($body))
+            <div class="ig-hc-subtext">{{ Str::limit($body, 90) }}</div>
+        @endif
+    </div>
+
+    {{-- Brand Layer: Bottom --}}
+    @include('instagram_studio.partials.dot_bar', compact('brand','slideNum','totalSlides'))
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 2: navy_full — Navy full-bleed, white text, numbered list           --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@elseif($layout === 'navy_full')
+<div class="ig-canvas ig-lyt-navy-full">
+    {{-- Decorative: subtle circle rings --}}
+    <div class="ig-deco-ring ig-ring-tr"></div>
+    <div class="ig-deco-ring ig-ring-bl"></div>
+
+    {{-- Brand Layer: Top (white logo) --}}
+    @include('instagram_studio.partials.brand_bar_white', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer --}}
+    <div class="ig-nf-body">
+        <div class="ig-nf-tag">
+            {{ $purpose === 'problem' ? '⚠ Gejala & Penyebab' : ($purpose === 'tips' ? '✓ Tips Sehat' : 'ℹ Info Penting') }}
+        </div>
+        <div class="ig-nf-headline">{{ $headline }}</div>
+
+        @if($hasImage)
+            <div class="ig-nf-photo-strip">
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            </div>
+        @endif
+
+        <div class="ig-nf-points">
+            @foreach(array_slice($points, 0, 4) as $i => $pt)
+                <div class="ig-nf-point">
+                    <span class="ig-nf-num">{{ $i + 1 }}</span>
+                    <span class="ig-nf-pt-text">{{ $pt }}</span>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Brand Layer: Bottom (white) --}}
+    @include('instagram_studio.partials.dot_bar_white', compact('brand','slideNum','totalSlides'))
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 3: white_top_blue — Top white (headline+photo), blue panel below    --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@elseif($layout === 'white_top_blue')
+<div class="ig-canvas ig-lyt-white-top-blue">
+    {{-- Brand Layer: Top --}}
+    @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer: Top zone --}}
+    <div class="ig-wtb-top">
+        <div class="ig-wtb-headline">{{ $headline }}</div>
+        @if($hasImage)
+            <div class="ig-wtb-photo">
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            </div>
+        @endif
+    </div>
+
+    {{-- Content Layer: Blue panel --}}
+    <div class="ig-wtb-panel">
+        @foreach(array_slice($points, 0, 3) as $i => $pt)
+            <div class="ig-wtb-point">
+                <div class="ig-wtb-num">No. {{ $i + 1 }}</div>
+                <div class="ig-wtb-text">{{ $pt }}</div>
+            </div>
+        @endforeach
+
+        {{-- Brand Layer: Bottom (inside blue panel) --}}
+        @include('instagram_studio.partials.dot_bar_white', compact('brand','slideNum','totalSlides'))
+    </div>
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 4: card_grid — 2×2 info cards, clean white bg                       --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@elseif($layout === 'card_grid')
+<div class="ig-canvas ig-lyt-card-grid">
+    {{-- Decorative: light bg pattern --}}
+    <div class="ig-deco-dots-bg"></div>
+
+    {{-- Brand Layer: Top --}}
+    @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer --}}
+    <div class="ig-cg-body">
+        <div class="ig-cg-headline">{{ $headline }}</div>
+
+        @php
+            $cardPoints = array_slice($points, 0, min(count($points), 4));
+            $cardColors = ['#1a58ad','#009beb','#0078c8','#3d9fd3'];
+            $cardIcons  = ['bi-shield-check','bi-clipboard2-pulse','bi-emoji-smile','bi-award'];
+        @endphp
+        <div class="ig-cg-grid">
+            @foreach($cardPoints as $i => $pt)
+                <div class="ig-cg-card" style="--card-accent: {{ $cardColors[$i % 4] }};">
+                    <div class="ig-cg-card-icon" style="color: {{ $cardColors[$i % 4] }};">
+                        <i class="bi {{ $cardIcons[$i % 4] }}"></i>
+                    </div>
+                    <div class="ig-cg-card-text">{{ $pt }}</div>
+                </div>
+            @endforeach
+        </div>
+
+        @if($hasImage)
+            <div class="ig-cg-photo-strip">
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            </div>
+        @endif
+    </div>
+
+    {{-- Brand Layer: Bottom --}}
+    @include('instagram_studio.partials.dot_bar', compact('brand','slideNum','totalSlides'))
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 5: split_reverse — Photo left 40%, text right 60%                   --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@elseif($layout === 'split_reverse')
+<div class="ig-canvas ig-lyt-split">
+    {{-- Brand Layer: Top --}}
+    @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer: Split --}}
+    <div class="ig-sr-content">
+        <div class="ig-sr-photo">
+            @if($hasImage)
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            @else
+                @include('instagram_studio.partials.photo_placeholder')
+            @endif
+        </div>
+        <div class="ig-sr-text">
+            <div class="ig-sr-tag">{{ strtoupper($purpose === 'problem' ? 'Gejala' : ($purpose === 'tips' ? 'Tips' : 'Info')) }}</div>
+            <div class="ig-sr-headline">{{ $headline }}</div>
+            <div class="ig-sr-points">
+                @foreach(array_slice($points, 0, 3) as $pt)
+                    <div class="ig-sr-point">
+                        <span class="ig-sr-dot"></span>
+                        <span class="ig-sr-pt">{{ $pt }}</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    {{-- Brand Layer: Bottom --}}
+    @include('instagram_studio.partials.dot_bar', compact('brand','slideNum','totalSlides'))
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 6: blue_gradient — Sky→navy gradient, circle photo center           --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@elseif($layout === 'blue_gradient')
+<div class="ig-canvas ig-lyt-blue-gradient">
+    {{-- Decorative: soft light rings --}}
+    <div class="ig-deco-glow ig-glow-top"></div>
+
+    {{-- Brand Layer: Top (white) --}}
+    @include('instagram_studio.partials.brand_bar_white', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer --}}
+    <div class="ig-bg-body">
+        <div class="ig-bg-headline">{{ $headline }}</div>
+
+        @if($hasImage)
+            <div class="ig-bg-photo-circle">
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            </div>
+        @else
+            <div class="ig-bg-icon-circle">
+                <i class="bi bi-clipboard2-pulse"></i>
+            </div>
+        @endif
+
+        <div class="ig-bg-points">
+            @foreach(array_slice($points, 0, 3) as $pt)
+                <div class="ig-bg-point">
+                    <i class="bi bi-check-circle-fill me-2"></i>{{ $pt }}
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Brand Layer: Bottom (white) --}}
+    @include('instagram_studio.partials.dot_bar_white', compact('brand','slideNum','totalSlides'))
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 7: editorial — Big slide number + editorial headline + photo strip   --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@elseif($layout === 'editorial')
+<div class="ig-canvas ig-lyt-editorial">
+    {{-- Brand Layer: Top --}}
+    @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer --}}
+    <div class="ig-ed-body">
+        <div class="ig-ed-number">0{{ $slideNum }}</div>
+        <div class="ig-ed-rule"></div>
+        <div class="ig-ed-headline">{{ $headline }}</div>
+
+        @if($hasImage)
+            <div class="ig-ed-photo">
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            </div>
+        @endif
+
+        <div class="ig-ed-copy">{{ Str::limit($body, 120) }}</div>
+
+        @if(count($points) > 1)
+            <div class="ig-ed-bullets">
+                @foreach(array_slice($points, 0, 3) as $pt)
+                    <div class="ig-ed-bullet"><span class="ig-ed-dash">—</span> {{ $pt }}</div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+    {{-- Brand Layer: Bottom --}}
+    @include('instagram_studio.partials.dot_bar', compact('brand','slideNum','totalSlides'))
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 8: scrapbook — Sticky note / paper texture, playful, doodle accents --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@elseif($layout === 'scrapbook')
+<div class="ig-canvas ig-lyt-scrapbook">
+    {{-- Decorative: paper texture blobs + doodle lines --}}
+    <div class="ig-deco-tape ig-tape-tl"></div>
+    <div class="ig-deco-tape ig-tape-tr"></div>
+    <div class="ig-deco-paw ig-paw-1">🐾</div>
+    <div class="ig-deco-paw ig-paw-2">🐾</div>
+
+    {{-- Brand Layer: Top --}}
+    @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer: Main sticky note --}}
+    <div class="ig-sb-body">
+        <div class="ig-sb-note">
+            <div class="ig-sb-note-headline">{{ $headline }}</div>
+            <div class="ig-sb-rule"></div>
+            @foreach(array_slice($points, 0, 3) as $i => $pt)
+                <div class="ig-sb-note-point">
+                    <span class="ig-sb-bullet">{{ ['🐶','🐱','🐰'][$i % 3] }}</span>
+                    <span class="ig-sb-pt-text">{{ $pt }}</span>
+                </div>
+            @endforeach
+        </div>
+
+        @if($hasImage)
+            <div class="ig-sb-photo">
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            </div>
+        @else
+            <div class="ig-sb-photo-placeholder">
+                <span class="ig-sb-ph-emoji">📸</span>
+            </div>
+        @endif
+    </div>
+
+    {{-- Brand Layer: Bottom --}}
+    @include('instagram_studio.partials.dot_bar', compact('brand','slideNum','totalSlides'))
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 9: typography_hero — Huge text dominant, small image bottom-right   --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@elseif($layout === 'typography_hero')
+<div class="ig-canvas ig-lyt-typo-hero">
+    {{-- Decorative: large faint initial letter --}}
+    <div class="ig-deco-bigchar">{{ mb_strtoupper(mb_substr($headline, 0, 1)) }}</div>
+
+    {{-- Brand Layer: Top --}}
+    @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer --}}
+    <div class="ig-th-body">
+        <div class="ig-th-headline">{{ $headline }}</div>
+        <div class="ig-th-rule"></div>
+        <div class="ig-th-body-text">{{ Str::limit($body, 150) }}</div>
+
+        @if(count($points) > 1)
+            <div class="ig-th-points">
+                @foreach(array_slice($points, 0, 3) as $pt)
+                    <div class="ig-th-point">→ {{ $pt }}</div>
+                @endforeach
+            </div>
+        @endif
+
+        @if($hasImage)
+            <div class="ig-th-photo-corner">
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            </div>
+        @endif
+    </div>
+
+    {{-- Brand Layer: Bottom --}}
+    @include('instagram_studio.partials.dot_bar', compact('brand','slideNum','totalSlides'))
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- LAYOUT 10: cta_full — CTA closing slide (always last slide)                --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@else{{-- cta_full --}}
+<div class="ig-canvas ig-lyt-cta">
+    {{-- Decorative: paw prints --}}
+    <div class="ig-deco-paw ig-paw-cta-1">🐾</div>
+    <div class="ig-deco-paw ig-paw-cta-2">🐾</div>
+    <div class="ig-deco-blob ig-blob-cta"></div>
+
+    {{-- Brand Layer: Top --}}
+    @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
+
+    {{-- Content Layer --}}
+    <div class="ig-cf-body">
+        <div class="ig-cf-tagline">{{ $brand['tagline'] ?? 'Kepercayaan Anda Adalah Prioritas Kami' }}</div>
+        <div class="ig-cf-headline">{{ !empty($headline) ? $headline : 'Konsultasikan ke ' . $clinicName . '!' }}</div>
+
+        @if($hasImage)
+            <div class="ig-cf-photo">
+                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+            </div>
+        @endif
+
+        <div class="ig-cf-box">
+            <div class="ig-cf-box-icon"><i class="bi bi-house-medical-fill"></i></div>
+            <div>
+                <div class="ig-cf-box-title">{{ $brand['clinic_name'] }}</div>
+                <div class="ig-cf-box-desc">{{ !empty($body) ? Str::limit($body, 90) : ($brand['tagline'] ?? 'Klinik hewan terpercaya untuk hewan kesayangan Anda.') }}</div>
+            </div>
+        </div>
+
+        <div class="ig-cf-features">
+            @if($ctaFeatures)
+                @foreach(array_slice($ctaFeatures, 0, 3) as $feat)
+                    <div class="ig-cf-feat">
+                        <i class="bi {{ $feat['icon'] }}"></i>
+                        <span>{{ $feat['label'] }}</span>
+                    </div>
+                @endforeach
+            @else
+                {{-- Fallback hanya jika DB tidak ada layanan sama sekali --}}
+                <div class="ig-cf-feat"><i class="bi bi-clipboard2-pulse"></i><span>Periksa</span></div>
+                <div class="ig-cf-feat"><i class="bi bi-shield-check"></i><span>Vaksin</span></div>
+                <div class="ig-cf-feat"><i class="bi bi-scissors"></i><span>Grooming</span></div>
+            @endif
+        </div>
+    </div>
+
+    {{-- Brand Layer: Bottom --}}
+    @include('instagram_studio.partials.dot_bar', compact('brand','slideNum','totalSlides'))
+</div>
+@endif

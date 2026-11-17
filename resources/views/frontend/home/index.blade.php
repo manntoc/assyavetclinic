@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html dir="@if (session()->has('language_direction_from_dropdown')) @if(session()->get('language_direction_from_dropdown') == 1) {{ __('rtl') }} @else {{ __('ltr') }} @endif @else {{ __('ltr') }} @endif" lang="@if (session()->has('language_code_from_dropdown')){{ str_replace('_', '-', session()->get('language_code_from_dropdown')) }}@else{{ str_replace('_', '-',   $language->language_code) }}@endif">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LH3HRX13D2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-LH3HRX13D2');
+</script>
     <!-- Meta Tags -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,7 +17,7 @@
     <meta name="title" content="@if (isset($general_seo)){{ $general_seo->site_name }} @endif">
     <meta name="description" content="@if (isset($general_seo)){{ $general_seo->site_desc }} @endif">
     <meta name="keywords" content="@if (isset($general_seo)){{ $general_seo->site_keywords }} @endif">
-    <meta name="author" content="elsecolor">
+    <meta name="author" content="superadmin">
     <meta property="fb:app_id" content="@if (isset($general_seo)){{ $general_seo->fb_app_id }} @endif">
     <meta property="og:title" content="@if (isset($general_seo)){{ $general_seo->site_name }} @endif">
     <meta property="og:url" content="@if (isset($general_seo)){{ url()->current() }} @endif">
@@ -27,6 +36,10 @@
 
     <!-- Title -->
     <title>{{ __('frontend.home') }} @if (isset($general_seo)) - {{ $general_seo->site_name }} @endif</title>
+
+	
+	<link rel="icon" href="https://assyavetclinic.com/logo-web.png" type="image/x-icon">
+    <link rel="shortcut icon" href="https://assyavetclinic.com/logo-web.png" type="image/x-icon">
 
 @if (!empty($general_site_image->favicon_image))
     <!-- Favicon -->
@@ -87,7 +100,7 @@
         @endif
 
     @endisset
-
+<meta name="google-site-verification" content="mpuXWFLZmP1x2Ti2G2PJo8Jpw-BSsI4aD3Aa984ULx8" />
 @if (isset($google_analytic))
     <!-- Global site tag (gtag.js) - Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ $google_analytic->google_analytic }}"></script>
@@ -100,7 +113,18 @@
         </script>
     @endif
 
+        <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-M5LP13BB4T"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-M5LP13BB4T');
+</script>
 </head>
+
+        
 <body data-spy="scroll" data-target="#fixedNavbar" @if (session()->has('language_direction_from_dropdown')) @if(session()->get('language_direction_from_dropdown') == 1)  class="rtl-mode" @endif @elseif (isset($language)) @if ($language->direction == 1) class="rtl-mode" @endif  @endif >
 
 <!--// Page Wrapper Start //-->
@@ -118,8 +142,8 @@
                         </a>
                     @else
                         <a class="navbar-brand" title="Home" href="#">
-                            <img src="{{ asset('uploads/img/dummy/assyavet.png') }}" alt="Logo White" class="img-fluid logo-transparent">
-                            <img src="{{ asset('uploads/img/dummy/assyavet.png') }}" alt="Logo Black" class="img-fluid logo-normal">
+                            <img src="{{ asset('uploads/img/dummy/assya323.png') }}" alt="Logo White" class="img-fluid logo-transparent">
+                            <img src="{{ asset('uploads/img/dummy/assya323.png') }}" alt="Logo Black" class="img-fluid logo-normal">
                         </a>
                     @endif
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#fixedNavbar"
@@ -145,33 +169,20 @@
                                 <a class="nav-link menu-link" href="#" data-scroll-nav="3">{{ __('frontend.services') }}</a>
                             </li>
                             @endif
-                            @if ($section_arr['portfolio_section'] == 1)
-                            <li class="nav-item">
-                                <a class="nav-link menu-link" href="#" data-scroll-nav="4">{{ __('frontend.portfolio') }}</a>
-                            </li>
-                            @endif
+                           
+                           
                             @if ($section_arr['blog_section'] == 1)
                             <li class="nav-item">
                                 <a class="nav-link menu-link" href="{{ route('blog-page.index') }}">{{ __('frontend.blogs') }}</a>
                             </li>
                             @endif
-                            @if ($section_arr['page_menu'] == 1)
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="pageDropdownMenu" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        {{ __('frontend.pages') }}
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="pageDropdownMenu">
-                                        @foreach ($header_pages as $header_page)
-                                            <a class="dropdown-item" href="{{ route('any-page.show', ['page_slug' => $header_page->page_slug]) }}">{{ $header_page->page_title }}</a>
-                                        @endforeach
-                                    </div>
-                                </li>
-                               @endif
+                           
                             @if ($section_arr['contact_section'] == 1)
                             <li class="nav-item">
                                 <a class="nav-link menu-link" href="#" data-scroll-nav="7">{{ __('frontend.contact') }}</a>
                             </li>
                             @endif
+
                             @if (count($display_dropdowns) > 0)
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" id="pageDropdownMenu" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -194,6 +205,28 @@
                                     </li>
                                 @endif
                             @endisset
+                            @if (Auth::check())
+                                <li class="nav-item dropdown">
+                                    <p class="nav-link dropdown-toggle" href="#" id="pageDropdownMenu" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        {{ str_word_count(Auth::user()->name) > 0 ? explode(' ', Auth::user()->name)[0] : '' }}
+                                    </p>
+                                    <div class="dropdown-menu" aria-labelledby="pageDropdownMenu">
+                                        <p class="dropdown-item">{{ str_word_count(Auth::user()->name) > 0 ? explode(' ', Auth::user()->name)[0] : '' }}</p>
+                                        <form method="POST" action="{{ route('logout') }}">
+                                            @csrf
+                              
+                                            <a href="#" href="route('logout')"
+                                            onclick="event.preventDefault();
+                                                        this.closest('form').submit();" class="dropdown-item">Keluar</a>
+                                                        </form>
+                                    </div>
+                                </li>
+                            @else
+                                <li class="nav-item">
+                                    <a class="nav-link menu-link" href="{{ route('loginuser') }}">Masuk</a>
+                                </li>
+                            @endif
+                            </li>
                         </ul>
                     </div>
                 </nav>
@@ -968,6 +1001,67 @@
     @endif
         <!--// About Section End //-->
 
+
+
+        <!-- booking form start -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <h2>Booking Form</h2>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center" style="padding-left: 10%; padding-right: 10%">
+        <div class="col-lg-12">
+            <div class="contact-form-wrap">
+                    <form action="{{ route('storebook') }}" method="POST">
+                        @csrf
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="contact-form-group">
+                                <input type="text" class="form-control"  name="nama" placeholder="Nama lengkap" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="contact-form-group">
+                                <input type="text" class="form-control"name="namahewan" placeholder="Nama hewan" required>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="contact-form-group">
+                                <input type="text" class="form-control" name="alamat" placeholder="Alamat lengkap" required>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="contact-form-group">
+                                <input type="number" class="form-control" name="telpon" placeholder="Nomor WhatsApp" required>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="contact-form-group">
+                                <input type="date" class="form-control" name="tanggal" required>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="contact-form-group">
+                                <textarea name="keluhan" class="form-control" cols="20" rows="8" placeholder="Keluhan pasien..." required></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-12 text-center">
+                            <div class="contact-btn-left">
+                                <button type="submit" class="primary-btn">
+                                    <span class="text">Booking Sekarang</span>
+                                    <span class="icon"><i class="fa fa-arrow-right"></i></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+        <!-- booking form end -->
+
         <!--// Resume Section Start //-->
         @if ($section_arr['feature_section'] == 1)
         @if (isset($feature_section) || count($features) > 0)
@@ -1283,285 +1377,11 @@
     @endif
         <!--// Services Section End //-->
 
-        <!--// Counter Section Start //-->
-        @if ($section_arr['counter_section'] == 1)
-        @if (isset($counter_section) || count($counters) > 0)
-            <section class="section pb-minus-70" id="counters" style="background-image: url({{ asset('uploads/img/dummy/counter-bg.png') }}">
-                <div class="container">
-                    @isset ($counter_section)
-                        <div class="row justify-content-center">
-                            <div class="col-lg-6">
-                                <div class="section-heading light">
-                                    <h2>{{ $counter_section->title }}</h2>
-                                </div>
-                            </div>
-                        </div>
-                    @endisset
-                    <div class="row">
-                        @foreach ($counters as $counter)
-                            <div class="col-md-4 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.{{ $loop->index + 1 }}s">
-                                <div class="counter-item">
-                                    <h3 class="counter">{{ $counter->timer }}</h3>
-                                    <p>{{ $counter->title }}</p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </section>
-        @else
-            <section class="section pb-minus-70" id="counters" style="background-image: url({{ asset('uploads/img/dummy/counter-bg.png') }}">
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-lg-6">
-                            <div class="section-heading light">
-                                <h2>More than 10,000 customers trusted me</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.1s">
-                            <div class="counter-item">
-                                <h3 class="counter">5,700</h3>
-                                <p>Happy Customer</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.3s">
-                            <div class="counter-item">
-                                <h3 class="counter">500</h3>
-                                <p>Project Complete</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.1s">
-                            <div class="counter-item">
-                                <h3 class="counter">1,250</h3>
-                                <p>Cups Of Coffee</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-    @endif
-    @endif
-        <!--// Counter Section End //-->
+        
 
-        <!--// How I Work Section Start //-->
-        @if ($section_arr['work_process_section'] == 1)
-        @if (isset($work_process_section) || count($work_processes) > 0)
-            <section class="section bg-dark-blue pb-30">
-                <div class="container">
-                    @isset ($work_process_section)
-                        <div class="row justify-content-center">
-                            <div class="col-lg-6">
-                                <div class="section-heading">
-                                    <span>{{ $work_process_section->section_title }}</span>
-                                    <h2>{{ $work_process_section->title }}</h2>
-                                </div>
-                            </div>
-                        </div>
-                        @endisset
-                        @php $i = 1; $t = 1; @endphp
-                        @foreach ($work_processes->chunk(3) as $work_process)
-                            <div class="row">
-                            @foreach ($work_process as $item)
-                                        <div class="col-md-4 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.{{ $i++ }}s">
-                                            <div class="how-i-work-item">
-                                                <div class="number">
-                                                    <span>0{{ $t++ }}</span>
-                                                </div>
-                                                <div class="number-border"></div>
-                                                @if ($item->image_status == "enable" && !empty($item->work_process_image))
-                                                    <div class="img">
-                                                        <img src="{{ asset('uploads/img/work_process/'.$item->work_process_image) }}" class="img-fluid" alt="How i work">
-                                                    </div>
-                                                @endif
-                                                <div class="text">
-                                                    <h5>{{ $item->title }}</h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                 @endforeach
-                            </div>
-                        @endforeach
+       
 
-                </div>
-            </section>
-         @else
-            <section class="section bg-dark-blue pb-30">
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-lg-6">
-                            <div class="section-heading">
-                                <span>How Our Work</span>
-                                <h2>Our prepare your projects in 3 stages</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.2s">
-                            <div class="how-i-work-item">
-                                <div class="number">
-                                    <span>01</span>
-                                </div>
-                                <div class="number-border"></div>
-                                <div class="img">
-                                    <img src="{{ asset('uploads/img/dummy/328x328.jpg') }}" class="img-fluid" alt="How i work">
-                                </div>
-                                <div class="text">
-                                    <h5>Thinking</h5>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.4s">
-                            <div class="how-i-work-item">
-                                <div class="number">
-                                    <span>02</span>
-                                </div>
-                                <div class="number-border"></div>
-                                <div class="img">
-                                    <img src="{{ asset('uploads/img/dummy/328x328.jpg') }}" class="img-fluid" alt="How i work">
-                                </div>
-                                <div class="text">
-                                    <h5>Research</h5>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.6s">
-                            <div class="how-i-work-item">
-                                <div class="number">
-                                    <span>03</span>
-                                </div>
-                                <div class="number-border"></div>
-                                <div class="img">
-                                    <img src="{{ asset('uploads/img/dummy/328x328.jpg') }}" class="img-fluid" alt="How i work">
-                                </div>
-                                <div class="text">
-                                    <h5>Design</h5>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-         @endif
-         @endif
-        <!--// How I Work Section End //-->
-
-        <!--// Skills Section Start //-->
-        @if ($section_arr['skill_section'] == 1)
-        @if (isset($skill) || count($skill_info_lists) > 0)
-            <section class="section">
-                <div class="container">
-                    <div class="row">
-                      @isset ($skill)
-                            <div class="col-lg-6 wow fadeInDown" data-wow-duration="0.7s" data-wow-delay="0.3s">
-                                <div class="skills-img">
-                                    <img src="{{ asset('uploads/img/skill/'.$skill->skill_image) }}" alt="About image" title="About image" class="img-fluid">
-                                    <span class="icon-check"><i class="fa fa-check"></i></span>
-                                    <div class="icon-border-line"></div>
-                                </div>
-                            </div>
-                          @endisset
-                        <div class="col-lg-6 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.3s">
-                            <div class="skills-inner">
-                               @isset ($skill)
-                                    <h6>{{ $skill->section_title }}</h6>
-                                    <h2>{{ $skill->title }}</h2>
-                                    @if (!empty($skill->desc)) <p>{{ $skill->desc }}</p> @endif
-                                   @endisset
-                                <div class="row">
-                                  @foreach ($skill_info_lists as $skill_info_list)
-                                        <div class="col-md-6 col-sm-6 skills-item-resp">
-                                            <div class="skills-item">
-                                                <div class="skills-item-text">
-                                                    <h5>{{ $skill_info_list->title }}</h5>
-                                                </div>
-                                                <div class="body">
-                                                    <h2 class="counter">{{ $skill_info_list->percent_rate }}</h2>
-                                                    <div class="skills-progress-bar">
-                                                        <div class="skills-progress-value slideInLeft wow" data-percent="{{ $skill_info_list->percent_rate }}"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                      @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        @else
-            <section class="section">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-6 wow fadeInDown" data-wow-duration="0.7s" data-wow-delay="0.3s">
-                            <div class="skills-img">
-                                <img src="{{ asset('uploads/img/dummy/480x600.jpg') }}" alt="About image" title="About image" class="img-fluid">
-                                <span class="icon-check"><i class="fa fa-check"></i></span>
-                                <div class="icon-border-line"></div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 wow fadeInUp" data-wow-duration="0.7s" data-wow-delay="0.3s">
-                            <div class="skills-inner">
-                                <h6>Skills</h6>
-                                <h2>Our specialize in frameworks UI for years</h2>
-                                <p>
-                                    A front end library is being released every day and it is requested
-                                    to master these technologies.I also follow the market every day and
-                                    follow the updates of new frontend frameworks and programming frameworks.
-                                    It is easier for me to keep up with new technologies in projects
-                                </p>
-                                <div class="row">
-                                    <div class="col-md-6 col-sm-6">
-                                        <ul class="mb-resp-15">
-                                            <li>Full Responsive Design</li>
-                                            <li>Modern Browser Compatible</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6  col-sm-6">
-                                        <ul>
-                                            <li>Clean & Quality Code</li>
-                                            <li>7/24 Customer Support</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 col-sm-6 skills-item-resp">
-                                        <div class="skills-item">
-                                            <div class="skills-item-text">
-                                                <h5>Design</h5>
-                                            </div>
-                                            <div class="body">
-                                                <h2 class="counter">80</h2>
-                                                <div class="skills-progress-bar">
-                                                    <div class="skills-progress-value slideInLeft wow" data-percent="80"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6 col-md-6 skills-item-resp">
-                                        <div class="skills-item">
-                                            <div class="skills-item-text">
-                                                <h5>Coding</h5>
-                                            </div>
-                                            <div class="body">
-                                                <h2 class="counter">90</h2>
-                                                <div class="skills-progress-bar">
-                                                    <div class="skills-progress-value slideInLeft wow" data-percent="90"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-    @endif
-    @endif
-        <!--// Skills Section End //-->
+      
 
         <!--// My Works Start //-->
         @if ($section_arr['portfolio_section'] == 1)
@@ -1822,7 +1642,7 @@
                                         </div>
                                         <div class="social">
                                             <ul>
-                                                @if (!empty($team->link_2)) <li><a href="{{ $team->link_2 }}"><i class="fab fa-facebook-f"></i></a></li> @endif
+                                                @if (!empty($team->link_2)) <li><a href="{{ $team->link_2 }}"><i class="fa fa-envelope"></i></a></li> @endif
                                                 @if (!empty($team->link_3)) <li><a href="{{ $team->link_3 }}"><i class="fab fa-twitter"></i></a></li> @endif
                                                 @if (!empty($team->link_4)) <li><a href="{{ $team->link_4 }}"><i class="fab fa-instagram"></i></a></li> @endif
                                                 @if (!empty($team->link_5)) <li><a href="{{ $team->link_5 }}"><i class="fab fa-linkedin"></i></a></li> @endif
@@ -2301,22 +2121,22 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="contact-form-group">
-                                                <input type="text" class="form-control"  name="name" placeholder="{{ __('frontend.name') }}" required>
+                                                <input type="text" class="form-control"  name="name" placeholder="Nama Anda" required>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="contact-form-group">
-                                                <input type="email" class="form-control" name="email" placeholder="{{ __('frontend.email') }}" required>
+                                                <input type="email" class="form-control" name="email" placeholder="Email Anda" required>
                                             </div>
                                         </div>
                                         <div class="col-md-12">
                                             <div class="contact-form-group">
-                                                <input type="text" class="form-control" name="subject" placeholder="{{ __('frontend.subject') }}" required>
+                                                <input type="text" class="form-control" name="subject" placeholder="Subjek Pesan" required>
                                             </div>
                                         </div>
                                         <div class="col-md-12">
                                             <div class="contact-form-group">
-                                                <textarea name="message" class="form-control" cols="20" rows="8" placeholder="{{ __('frontend.message') }}" required></textarea>
+                                                <textarea name="message" class="form-control" cols="20" rows="8" placeholder="Tuliskan Pesan Anda" required></textarea>
                                             </div>
                                         </div>
                                         <div class="col-md-12 text-center">
@@ -2401,7 +2221,7 @@
                                         <div class="col-md-12 text-center">
                                             <div class="contact-btn-left">
                                                 <button type="submit" id="contactBtn" class="primary-btn">
-                                                    <span class="text">Send Message</span>
+                                                    <span class="text">Kirim Pesan</span>
                                                     <span class="icon"><i class="fa fa-arrow-right"></i></span>
                                                 </button>
                                             </div>
@@ -2509,7 +2329,7 @@
                             <div class="col-md-6 col-lg-4 footer-widget-resp">
                                 <div class="footer-widget">
                                     <h6 class="footer-title">Tentang Kami</h6>
-                                    <img src="{{ asset('uploads/img/dummy/assyavet.png') }}" alt="footer logo" class="img-fluid footer-logo">
+                                    <img src="{{ asset('uploads/img/dummy/assya328.png') }}" alt="footer logo" class="img-fluid footer-logo">
                                     <p class="footer-desc">
                                         It is a long established fact that a reader will be
                                         distracted by the readable content..
@@ -2656,7 +2476,8 @@
 <!--// Page Wrapper End //-->
 
 
-@if ($section_arr['color_option_sidebar'] == 1)
+
+{{-- @if ($section_arr['color_option_sidebar'] == 1)
 <div id="colorOptionsSidebar">
     <div class="color-options-wrap">
         <button type="button" id="colorOptionsSidebarToggle">
@@ -2686,7 +2507,9 @@
     <button type="button" id="rtlToggle">RTL</button>
 </div>
 @endif
-<!--// #rtlSidebar //-->
+<!--// #rtlSidebar //--> --}}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 <!--// JQuery //-->
 <script src="{{ asset('assets/frontend/vendor/js/jquery.min.js') }}"></script>
@@ -2737,6 +2560,9 @@
 
 <!--// Main Js //-->
 <script src="{{ asset('assets/frontend/js/main.js') }}"></script>
+
+<!--// loginregis Js //-->
+<script src="{{ asset('assets/frontend/js/loginregis.js') }}"></script>
 
 @if (session()->has('language_direction_from_dropdown'))
 
@@ -2819,6 +2645,25 @@
 @endif
 @endif
 
+<script>
+    // Handle respons dari server setelah update berhasil atau gagal
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Sukses!',
+            text: '{{ session('success') }}',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    @elseif(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: '{{ session('error') }}',
+            showConfirmButton: true
+        });
+    @endif
+</script>
 
 </body>
 </html>

@@ -30,4 +30,17 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'ninerouter' => [
+        'api_key' => env('NINEROUTER_API_KEY'),
+        'base_url' => env('NINEROUTER_BASE_URL', 'http://localhost:20128/v1'),
+    ],
+
+    'instagram' => [
+        'access_token' => env('INSTAGRAM_ACCESS_TOKEN'),
+        'account_id'   => env('INSTAGRAM_ACCOUNT_ID'),
+        'app_id'       => env('INSTAGRAM_APP_ID'),
+        'app_secret'   => env('INSTAGRAM_APP_SECRET'),
+        'graph_version'=> env('INSTAGRAM_GRAPH_VERSION', 'v21.0'),
+    ],
+
 ];

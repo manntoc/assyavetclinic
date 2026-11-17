@@ -18,7 +18,7 @@ class Portfolio extends Model
      *
      * @return array
      */
-    public function sluggable()
+    public function sluggable(): array
     {
         return [
             'portfolio_slug' => [
@@ -68,6 +68,6 @@ class Portfolio extends Model
 
     public function portfolio_category()
     {
-        return $this->belongsTo('App\Models\Admin\PortfolioCategory','category_id','id');
+        return $this->belongsTo('App\Models\Admin\PortfolioCategory', 'category_id', 'id');
     }
 }

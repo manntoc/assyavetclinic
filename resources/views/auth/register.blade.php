@@ -1,43 +1,86 @@
-<x-guest-layout>
-    <x-jet-authentication-card>
-        <x-slot name="logo">
-            <x-jet-authentication-card-logo />
-        </x-slot>
+<x-guest-layout class="wide">
+    <div class="kreloses-auth-card">
+        <!-- BRAND HEADER -->
+        <div class="text-center mb-4">
+            <div class="auth-brand-logo">
+                <i class="bi bi-person-plus-fill"></i>
+            </div>
+            <h1 class="auth-title mb-1">Pendaftaran Pegawai</h1>
+            <p class="auth-subtitle">Buat Akun Baru VetClinic OS</p>
+        </div>
 
-        <x-jet-validation-errors class="mb-4" />
+        <!-- ERROR VALIDATION ALERT -->
+        @if ($errors->any())
+            <div class="alert alert-danger border-0 shadow-sm mb-4 p-3" role="alert" style="background-color: #fef2f2; color: #991b1b; border-radius: 10px;">
+                <div class="d-flex align-items-center mb-1 fw-bold small">
+                    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                    Gagal Mendaftar:
+                </div>
+                <ul class="mb-0 ps-4 small">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-        <form method="POST" action="{{ route('register') }}">
+        <!-- REGISTER FORM -->
+        <form method="POST" action="{{ Route::has('registeruser') ? route('registeruser') : route('register') }}">
             @csrf
 
-            <div>
-                <x-jet-label value="{{ __('Name') }}" />
-                <x-jet-input class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+            <!-- NAMA LENGKAP FIELD -->
+            <div class="mb-3">
+                <label for="name" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" placeholder="Nama lengkap" required autofocus autocomplete="name">
+                </div>
             </div>
 
-            <div class="mt-4">
-                <x-jet-label value="{{ __('Email') }}" />
-                <x-jet-input class="block mt-1 w-full" type="email" name="email" :value="old('email')" required />
+            <!-- EMAIL FIELD -->
+            <div class="mb-3">
+                <label for="email" class="form-label">Alamat Email <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="nama@email.com" required autocomplete="username">
+                </div>
             </div>
 
-            <div class="mt-4">
-                <x-jet-label value="{{ __('Password') }}" />
-                <x-jet-input class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
+            <!-- PASSWORD FIELD -->
+            <div class="mb-3">
+                <label for="password" class="form-label">Kata Sandi <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Minimal 8 karakter" required autocomplete="new-password">
+                    <button class="password-toggle-btn" type="button" onclick="togglePassword('password', 'passwordIcon')" title="Lihat/Sembunyikan Password">
+                        <i class="bi bi-eye-fill" id="passwordIcon"></i>
+                    </button>
+                </div>
             </div>
 
-            <div class="mt-4">
-                <x-jet-label value="{{ __('Confirm Password') }}" />
-                <x-jet-input class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
+            <!-- CONFIRM PASSWORD FIELD -->
+            <div class="mb-4">
+                <label for="password_confirmation" class="form-label">Konfirmasi Kata Sandi <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                    <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" placeholder="Ulangi kata sandi" required autocomplete="new-password">
+                    <button class="password-toggle-btn" type="button" onclick="togglePassword('password_confirmation', 'confirmPasswordIcon')" title="Lihat/Sembunyikan Password">
+                        <i class="bi bi-eye-fill" id="confirmPasswordIcon"></i>
+                    </button>
+                </div>
             </div>
 
-            <div class="flex items-center justify-end mt-4">
-                <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('login') }}">
-                    {{ __('Already registered?') }}
-                </a>
-
-                <x-jet-button class="ml-4">
-                    {{ __('Register') }}
-                </x-jet-button>
-            </div>
+            <!-- SUBMIT BUTTON -->
+            <button type="submit" class="btn-kreloses-blue py-2 fs-6">
+                <i class="bi bi-check-circle-fill me-1"></i> Buat Akun Baru
+            </button>
         </form>
-    </x-jet-authentication-card>
+
+        <!-- FOOTER LINK TO LOGIN -->
+        <div class="auth-footer">
+            Sudah memiliki akun? 
+            <a href="{{ route('login') }}" class="auth-link">Masuk Ke Sistem</a>
+        </div>
+    </div>
 </x-guest-layout>
+

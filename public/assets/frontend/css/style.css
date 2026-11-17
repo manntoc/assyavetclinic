@@ -5487,3 +5487,12 @@ body.rtl-mode .navbar-btn-resp {
   margin-right: 35px;
 }
 /*# sourceMappingURL=style.css.map */
+
+
+
+/* style booking */
+
+textarea {
+  resize: vertical;
+}
+

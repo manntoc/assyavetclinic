@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html dir="@if (session()->has('language_direction_from_dropdown')) @if(session()->get('language_direction_from_dropdown') == 1) {{ __('rtl') }} @else {{ __('ltr') }} @endif @else {{ __('ltr') }} @endif" lang="@if (session()->has('language_code_from_dropdown')){{ str_replace('_', '-', session()->get('language_code_from_dropdown')) }}@else{{ str_replace('_', '-',   $language->language_code) }}@endif">
 <head>
+
+
+
+
     <!-- Meta Tags -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,7 +12,7 @@
     <meta name="title" content="@if (isset($blog)) {{ $blog->title }} @elseif (isset($service)) {{ $service->title }} @elseif (isset($portfolio->title)) {{ $portfolio->title }} @elseif (isset($general_seo)){{ $general_seo->site_name }} @endif">
     <meta name="description" content="@if (isset($blog)) {{ $blog->meta_desc }} @elseif (isset($service)) {{ $service->meta_desc }} @elseif (isset($portfolio)) {{ $portfolio->meta_desc }} @elseif (isset($general_seo)){{ $general_seo->site_desc }} @endif">
     <meta name="keywords" content="@if (isset($blog)) {{ $blog->meta_keyword }} @elseif (isset($service)) {{ $service->meta_keyword }} @elseif (isset($portfolio)) {{ $portfolio->meta_keyword }} @elseif (isset($general_seo)){{ $general_seo->site_keywords }} @endif ">
-    <meta name="author" content="elsecolor">
+    <meta name="author" content="superadmin">
     <meta property="fb:app_id" content="@if (isset($general_seo)){{ $general_seo->fb_app_id }} @endif">
     <meta property="og:title" content="@if (isset($blog)) {{ $blog->title }} @elseif (isset($service)) {{ $service->title }} @elseif (isset($portfolio->title)) {{ $portfolio->title }} @elseif (isset($general_seo)){{ $general_seo->site_name }} @endif">
     <meta property="og:url" content="{{ url()->current() }}">
@@ -27,6 +31,8 @@
 
     <!-- Title -->
     <title>@if (isset($general_seo)){{ $general_seo->site_name }} @endif @if (isset($blog)) {{ $blog->title }} @elseif (isset($service)) {{ $service->title }} @elseif (isset($portfolio->title)) {{ $portfolio->title }} @elseif (isset($general_seo)){{ $general_seo->site_name }} @endif</title>
+	<link rel="icon" href="https://assyavetclinic.com/logo-web.png" type="image/x-icon">
+    <link rel="shortcut icon" href="https://assyavetclinic.com/logo-web.png" type="image/x-icon">
 
 @if (!empty($general_site_image->favicon_image))
     <!-- Favicon -->
@@ -38,6 +44,9 @@
         <link href="{{ asset('uploads/img/dummy/favicon.png') }}" sizes="128x128" rel="shortcut icon" />
 @endif
 
+
+    <!-- loginregis style -->
+    {{-- <link rel="stylesheet" href="{{ asset('assets/frontend/css/loginregis.css') }}"> --}}
     <!--// Bootstrap  //-->
     <link rel="stylesheet" href="{{ asset('assets/frontend/vendor/css/bootstrap.min.css') }}">
     <!--// Magnific Popup //-->
@@ -115,8 +124,8 @@
                         </a>
                     @else
                         <a class="navbar-brand" title="Home" href="#">
-                            <img src="{{ asset('uploads/img/dummy/white-logo.png') }}" alt="Logo White" class="img-fluid logo-transparent">
-                            <img src="{{ asset('uploads/img/dummy/colored-logo.png') }}" alt="Logo Black" class="img-fluid logo-normal">
+                            <img src="{{ asset('uploads/img/dummy/assya323.png') }}" alt="Logo White" class="img-fluid logo-transparent">
+                            <img src="{{ asset('uploads/img/dummy/assya323.png') }}" alt="Logo Black" class="img-fluid logo-normal">
                         </a>
                     @endif
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#fixedNavbar"
@@ -251,7 +260,7 @@
                                 <div class="col-md-6 col-lg-4 footer-widget-resp">
                                     <div class="footer-widget">
                                         <h6 class="footer-title">Tentang Kami</h6>
-                                        <img src="{{ asset('uploads/img/dummy/white-logo.png') }}" alt="footer logo" class="img-fluid footer-logo">
+                                        <img src="{{ asset('uploads/img/dummy/fixlogo1.png') }}" alt="footer logo" class="img-fluid footer-logo">
                                         <p class="footer-desc">
                                             It is a long established fact that a reader will be
                                             distracted by the readable content..
@@ -394,7 +403,7 @@
 @endif
 <!--// Preloader // -->
 
-    @if ($section_arr['color_option_sidebar'] == 1)
+    {{-- @if ($section_arr['color_option_sidebar'] == 1)
     <div id="colorOptionsSidebar">
     <div class="color-options-wrap">
         <button type="button" id="colorOptionsSidebarToggle">
@@ -424,7 +433,7 @@
     <button type="button" id="rtlToggle">RTL</button>
 </div>
     @endif
-<!--// #rtlSidebar //-->
+<!--// #rtlSidebar //--> --}}
 
 </div>
 <!--// Page Wrapper End //-->
@@ -460,6 +469,8 @@
 <script src="{{ asset('assets/frontend/vendor/js/isotope.min.js') }}"></script>
 <!--// Main Js //-->
 <script src="{{ asset('assets/frontend/js/main.js') }}"></script>
+<!--// loginregis Js //-->
+<script src="{{ asset('assets/frontend/js/loginregis.js') }}"></script>
 
 @if (session()->has('language_direction_from_dropdown'))
 

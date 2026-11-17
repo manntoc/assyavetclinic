@@ -16,7 +16,7 @@ class FaqCategory extends Model
      *
      * @return array
      */
-    public function sluggable()
+    public function sluggable(): array
     {
         return [
             'faq_category_slug' => [

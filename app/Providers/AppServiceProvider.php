@@ -36,6 +36,10 @@ class AppServiceProvider extends ServiceProvider
         // Allows using Bootstrap 4.x for paging. Normally Tailwindcss.
         Paginator::useBootstrap();
 
+        if (request()->hasHeader('X-Forwarded-Proto') || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) || (isset($_SERVER['HTTP_HOST']) && !str_contains($_SERVER['HTTP_HOST'], 'localhost') && !str_contains($_SERVER['HTTP_HOST'], '127.0.0.1'))) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         $demo_mode = 'off'; // on/off
         View::share('demo_mode', $demo_mode);
 

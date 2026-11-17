@@ -458,3 +458,59 @@ function Filaous_Color_Options(){
         }
     });
 }
+document.addEventListener('click', function(event) {
+    const datePicker = document.getElementById('datePicker');
+    if (!datePicker.contains(event.target) && event.target.id !== 'tanggalPerawatan') {
+        datePicker.style.display = 'none';
+    }
+});
+
+function showDatePicker() {
+    const datePicker = document.getElementById('datePicker');
+    datePicker.style.display = 'block';
+    if (!datePicker.innerHTML.trim()) {
+        generateCalendar(new Date());
+    }
+}
+
+function generateCalendar(date) {
+    const datePicker = document.getElementById('datePicker');
+    const month = date.getMonth();
+    const year = date.getFullYear();
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    let table = `<table>
+        <tr>
+            <th>Su</th>
+            <th>Mo</th>
+            <th>Tu</th>
+            <th>We</th>
+            <th>Th</th>
+            <th>Fr</th>
+            <th>Sa</th>
+        </tr>
+        <tr>`;
+
+    for (let i = 0; i < firstDay; i++) {
+        table += '<td></td>';
+    }
+
+    for (let i = 1; i <= lastDate; i++) {
+        if ((i + firstDay - 1) % 7 === 0 && i !== 1) {
+            table += '</tr><tr>';
+        }
+        table += `<td onclick="selectDate(${i}, ${month}, ${year})">${i}</td>`;
+    }
+
+    table += '</tr></table>';
+
+    datePicker.innerHTML = table;
+}
+
+function selectDate(day, month, year) {
+    const dateField = document.getElementById('tanggalPerawatan');
+    dateField.value = `${year}-${month + 1}-${day}`;
+    document.getElementById('datePicker').style.display = 'none';
+}

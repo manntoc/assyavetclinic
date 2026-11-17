@@ -18,7 +18,7 @@ class Service extends Model
      *
      * @return array
      */
-    public function sluggable()
+    public function sluggable(): array
     {
         return [
             'service_slug' => [
@@ -65,5 +65,4 @@ class Service extends Model
         'custom_breadcrumb_image',
         'order',
     ];
-
 }

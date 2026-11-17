@@ -18,7 +18,7 @@ class Page extends Model
      *
      * @return array
      */
-    public function sluggable()
+    public function sluggable(): array
     {
         return [
             'page_slug' => [
