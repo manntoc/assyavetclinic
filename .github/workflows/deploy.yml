@@ -1,0 +1,42 @@
+name: Auto Deploy to Hosting
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - view
+
+jobs:
+  web-deploy:
+    name: Sync to cPanel via FTP
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 📂 Deploy Files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # Catatan: Jika akun FTP mengarah ke home (/home/user), gunakan public_html/
+          # Jika akun FTP sudah diset langsung ke folder public_html, gunakan ./
+          server-dir: public_html/
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github*
+            **/.github*/**
+            **/node_modules/**
+            **/vendor/**
+            .env
+            .env.*
+            *.zip
+            scratch/**
+            tests/**
+
