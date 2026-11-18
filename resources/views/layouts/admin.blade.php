@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VetClinic OS: Sistem Informasi Manajemen Klinik Hewan</title>
+    <title>VetClinic OS : AssyaVetClinic</title>
 
     <!-- EARLY SIDEBAR STATE RESOLVER (PREVENT FLICKER / FOUC) -->
     <script>
