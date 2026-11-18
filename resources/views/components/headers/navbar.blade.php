@@ -123,7 +123,7 @@
                     <li class="sidebar-item mb-1">
                         <a href="{{ route('dashboard') }}" class='sidebar-link d-flex align-items-center text-decoration-none'>
                             <i class="bi bi-laptop me-2 fs-6"></i>
-                            <span>Manajemen Website</span>
+                            <span>Website</span>
                         </a>
                     </li>
                 @endif

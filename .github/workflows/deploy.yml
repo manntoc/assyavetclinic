@@ -23,9 +23,9 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # Catatan: Jika akun FTP mengarah ke home (/home/user), gunakan public_html/
-          # Jika akun FTP sudah diset langsung ke folder public_html, gunakan ./
-          server-dir: public_html/
+          port: 21
+          protocol: ftp
+          server-dir: ./
           dangerous-clean-slate: false
           exclude: |
             **/.git*
