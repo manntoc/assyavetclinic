@@ -18,10 +18,38 @@
     <div class="login form">
       <header>Masuk <br> <h3 style="color: #666"><span style="color: #2B8BBB">Assya</span> Vet Clinic</h3></header>
       
+      <!-- ALERT ERROR & STATUS NOTIFICATION -->
+      @if ($errors->any())
+        <div style="background-color: #fee2e2; border: 1px solid #f87171; color: #991b1b; padding: 12px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; line-height: 1.4;">
+          <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span>⚠️</span> Gagal Masuk:
+          </div>
+          <ul style="margin: 0; padding-left: 18px;">
+            @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
+      @if (session('error'))
+        <div style="background-color: #fee2e2; border: 1px solid #f87171; color: #991b1b; padding: 12px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; line-height: 1.4; display: flex; align-items: center; gap: 6px;">
+          <span>⚠️</span>
+          <div>{{ session('error') }}</div>
+        </div>
+      @endif
+
+      @if (session('status'))
+        <div style="background-color: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 12px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; line-height: 1.4; display: flex; align-items: center; gap: 6px;">
+          <span>✅</span>
+          <div>{{ session('status') }}</div>
+        </div>
+      @endif
+
       <form method="POST" action="{{ route('loginuser') }}">
         @csrf
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password"  name="password" placeholder="********">
+        <input type="email" name="email" value="{{ old('email') }}" placeholder="Email" required autofocus>
+        <input type="password" name="password" placeholder="********" required>
         <input type="submit" class="button" value="Masuk">
       </form>
       <div class="signup">

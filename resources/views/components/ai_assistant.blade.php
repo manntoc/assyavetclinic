@@ -1,17 +1,74 @@
 <!-- VETCLINIC OS - FLOATING CLINIC ASSISTANT WIDGET -->
 <div id="ai-assistant-root" style="position: fixed; bottom: 24px; right: 24px; z-index: 99999; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;">
     
-    <!-- 1. FLOATING LAUNCHER BUTTON -->
-    <button id="ai-assistant-toggle-btn" type="button" 
-            title="Buka Asisten Klinik" 
-            aria-label="Buka Asisten Klinik Assyavet"
-            style="width: 54px; height: 54px; border-radius: 50%; background-color: #2d8aba; color: #ffffff; border: none; box-shadow: 0 4px 14px rgba(45, 138, 186, 0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: transform 0.2s ease, background-color 0.2s ease;">
-        <i id="ai-assistant-icon-open" class="bi bi-chat-dots-fill" style="font-size: 22px; line-height: 1; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;"></i>
-        <i id="ai-assistant-icon-close" class="bi bi-x-lg" style="font-size: 20px; line-height: 1; width: 20px; height: 20px; display: none; align-items: center; justify-content: center;"></i>
+    <!-- 1. FLOATING LAUNCHER CONTAINER (WITH POPUP & ANIMATED MASCOT) -->
+    <div id="ai-launcher-wrapper" style="position: relative; display: flex; align-items: center; justify-content: flex-end; padding: 6px; margin: -6px;">
         
-        <!-- Online Indicator (Subtle, no glow slop) -->
-        <span style="position: absolute; top: 1px; right: 1px; width: 11px; height: 11px; background-color: #10b981; border: 2px solid #ffffff; border-radius: 50%;"></span>
-    </button>
+        <!-- POPUP SPEECH BUBBLE (Tampil saat kursor mendekati / hover) -->
+        <div id="ai-launcher-tooltip" 
+             role="tooltip"
+             style="position: absolute; right: 72px; top: 50%; transform: translateY(-50%) translateX(6px); opacity: 0; visibility: hidden; background: #ffffff; color: #1e293b; padding: 9px 18px; border-radius: 14px; font-size: 13px; font-weight: 600; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12); border: 1px solid #e2e8f0; white-space: nowrap; cursor: pointer; transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease; z-index: 99999; user-select: none;">
+            <span>Buka Asisten Assyavet</span>
+            <!-- Ekor Panah SVG Mulus (Tanpa garis potong border glitch) -->
+            <svg style="position: absolute; right: -7px; top: 50%; transform: translateY(-50%); width: 8px; height: 14px; overflow: visible; pointer-events: none;" viewBox="0 0 8 14" fill="none">
+                <path d="M0 0.5L6.5 6.3C6.9 6.7 6.9 7.3 6.5 7.7L0 13.5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2"/>
+                <rect x="-3" y="0" width="4" height="14" fill="#ffffff"/>
+            </svg>
+        </div>
+
+        <!-- FLOATING LAUNCHER BUTTON -->
+        <button id="ai-assistant-toggle-btn" type="button" 
+                title="Buka Asisten Klinik" 
+                aria-label="Buka Asisten Klinik Assyavet"
+                style="width: 58px; height: 58px; border-radius: 50%; background-color: #ffffff; color: #2d8aba; border: 2.5px solid #2d8aba; box-shadow: 0 6px 20px rgba(45, 138, 186, 0.28); cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease, border-color 0.25s ease; padding: 0; outline: none;">
+            
+            <!-- MASKOT DEFAULT (Desain Bersih & Halus Tanpa Garis Mengambang) -->
+            <!-- Note: Bila gambar maskot custom sudah siap, cukup ganti SVG di bawah dengan <img src="{{ asset('path/maskot.png') }}" style="width: 44px; height: 44px; object-fit: contain;"> -->
+            <div id="ai-mascot-avatar" class="ai-mascot-floating" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none;">
+                <svg width="42" height="42" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Head Body Capsule -->
+                    <rect x="8" y="10" width="32" height="28" rx="10" fill="url(#botHeadGrad)" stroke="#2d8aba" stroke-width="2"/>
+                    
+                    <!-- Ear Pods (Capsules on side) -->
+                    <rect x="4" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+                    <rect x="40" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+
+                    <!-- Dark Visor Screen -->
+                    <rect x="12" y="14" width="24" height="17" rx="6" fill="#0f172a"/>
+                    
+                    <!-- Glowing Blinking Eyes -->
+                    <g class="ai-mascot-eyes">
+                        <rect x="16" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                        <rect x="27.5" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                    </g>
+
+                    <!-- Cheeks -->
+                    <circle cx="15" cy="27" r="1.5" fill="#f472b6" opacity="0.85"/>
+                    <circle cx="33" cy="27" r="1.5" fill="#f472b6" opacity="0.85"/>
+
+                    <!-- Smile -->
+                    <path d="M21.5 26.5C22.5 28 25.5 28 26.5 26.5" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+
+                    <!-- Medical Cross on Collar -->
+                    <rect x="22.5" y="40" width="3" height="5" rx="1" fill="#2d8aba"/>
+                    <rect x="21.5" y="41" width="5" height="3" rx="1" fill="#2d8aba"/>
+
+                    <defs>
+                        <linearGradient id="botHeadGrad" x1="8" y1="10" x2="40" y2="38" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#f0f9ff"/>
+                            <stop offset="1" stop-color="#dbeafe"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+
+            <!-- Close Icon (Tampil saat chat terbuka) -->
+            <i id="ai-assistant-icon-close" class="bi bi-x-lg" style="font-size: 22px; line-height: 1; width: 22px; height: 22px; display: none; align-items: center; justify-content: center; color: #ffffff;"></i>
+            
+            <!-- Online Indicator (Active Green) -->
+            <span style="position: absolute; top: 1px; right: 1px; width: 12px; height: 12px; background-color: #10b981; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);"></span>
+        </button>
+    </div>
 
     <!-- 2. CHAT DRAWER / WINDOW MODAL -->
     <div id="ai-assistant-window" class="d-none" role="dialog" aria-modal="true" aria-labelledby="ai-window-title" style="position: fixed; bottom: 88px; right: 24px; width: 420px; max-width: calc(100vw - 28px); height: min(580px, calc(100vh - 110px)); background: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); border: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow: hidden; animation: aiDrawerSlideUp 0.25s ease-out; z-index: 99998;">
@@ -19,8 +76,20 @@
         <!-- CHAT HEADER -->
         <div id="ai-chat-header" style="background-color: #2d8aba; padding: 12px 16px; color: #ffffff; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.15); transition: background-color 0.25s ease; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
-                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <i id="ai-header-icon" class="bi bi-chat-heart-fill" style="font-size: 18px; color: #ffffff; line-height: 1; display: flex; align-items: center; justify-content: center;"></i>
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #ffffff; border: 2px solid rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">
+                    <svg width="26" height="26" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="10" width="32" height="28" rx="10" fill="#e0f2fe" stroke="#2d8aba" stroke-width="2.5"/>
+                        <rect x="4" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+                        <rect x="40" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+                        <rect x="12" y="14" width="24" height="17" rx="6" fill="#0f172a"/>
+                        <rect x="16" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                        <rect x="27.5" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                        <circle cx="15" cy="27" r="1.5" fill="#f472b6"/>
+                        <circle cx="33" cy="27" r="1.5" fill="#f472b6"/>
+                        <path d="M21.5 26.5C22.5 28 25.5 28 26.5 26.5" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+                        <rect x="22.5" y="40" width="3" height="5" rx="1" fill="#2d8aba"/>
+                        <rect x="21.5" y="41" width="5" height="3" rx="1" fill="#2d8aba"/>
+                    </svg>
                 </div>
                 <div style="min-width: 0; flex: 1;">
                     <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
@@ -64,8 +133,20 @@
             
             <!-- INITIAL WELCOME MESSAGE -->
             <div class="ai-msg-group" style="display: flex; gap: 10px; max-width: 92%;">
-                <div style="width: 30px; height: 30px; border-radius: 50%; background: #2d8aba; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; margin-top: 2px;">
-                    <i class="bi bi-chat-heart-fill"></i>
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #ffffff; border: 1.5px solid #2d8aba; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; box-shadow: 0 2px 6px rgba(45, 138, 186, 0.15);">
+                    <svg width="22" height="22" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="10" width="32" height="28" rx="10" fill="#e0f2fe" stroke="#2d8aba" stroke-width="2.5"/>
+                        <rect x="4" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+                        <rect x="40" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+                        <rect x="12" y="14" width="24" height="17" rx="6" fill="#0f172a"/>
+                        <rect x="16" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                        <rect x="27.5" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                        <circle cx="15" cy="27" r="1.5" fill="#f472b6"/>
+                        <circle cx="33" cy="27" r="1.5" fill="#f472b6"/>
+                        <path d="M21.5 26.5C22.5 28 25.5 28 26.5 26.5" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+                        <rect x="22.5" y="40" width="3" height="5" rx="1" fill="#2d8aba"/>
+                        <rect x="21.5" y="41" width="5" height="3" rx="1" fill="#2d8aba"/>
+                    </svg>
                 </div>
                 <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 12px 14px; border-radius: 14px; border-top-left-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); font-size: 13px; color: #334155; line-height: 1.5;">
                     Halo! Saya <strong>Asisten Klinik Assyavet</strong>.<br><br>
@@ -86,8 +167,20 @@
 
         <!-- TYPING INDICATOR -->
         <div id="ai-assistant-typing" class="d-none" style="padding: 8px 16px; background-color: #f8fafc; display: flex; align-items: center; gap: 10px;">
-            <div style="width: 26px; height: 26px; border-radius: 50%; background: #2d8aba; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-                <i class="bi bi-chat-heart-fill"></i>
+            <div style="width: 26px; height: 26px; border-radius: 50%; background: #ffffff; border: 1.5px solid #2d8aba; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 1px 4px rgba(45, 138, 186, 0.12);">
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="8" y="10" width="32" height="28" rx="10" fill="#e0f2fe" stroke="#2d8aba" stroke-width="2.5"/>
+                    <rect x="4" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+                    <rect x="40" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+                    <rect x="12" y="14" width="24" height="17" rx="6" fill="#0f172a"/>
+                    <rect x="16" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                    <rect x="27.5" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                    <circle cx="15" cy="27" r="1.5" fill="#f472b6"/>
+                    <circle cx="33" cy="27" r="1.5" fill="#f472b6"/>
+                    <path d="M21.5 26.5C22.5 28 25.5 28 26.5 26.5" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+                    <rect x="22.5" y="40" width="3" height="5" rx="1" fill="#2d8aba"/>
+                    <rect x="21.5" y="41" width="5" height="3" rx="1" fill="#2d8aba"/>
+                </svg>
             </div>
             <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 12px; font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 6px;">
                 <span>Mencari data & menganalisis</span>
@@ -267,13 +360,105 @@
         0%, 100% { opacity: 0.3; transform: scale(0.8); }
         50% { opacity: 1; transform: scale(1.2); }
     }
+
+    /* 1. Mascot Floating Idle Animation */
+    .ai-mascot-floating {
+        animation: aiMascotFloat 3.2s ease-in-out infinite;
+        transform-origin: center bottom;
+        transition: transform 0.25s ease;
+    }
+
+    @keyframes aiMascotFloat {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-4px);
+        }
+    }
+
+    /* 2. Mascot Blinking Eyes Animation */
+    .ai-mascot-eyes {
+        transform-origin: 24px 23px;
+        animation: aiMascotEyeBlink 4s ease-in-out infinite;
+    }
+
+    @keyframes aiMascotEyeBlink {
+        0%, 46%, 54%, 100% {
+            transform: scaleY(1);
+        }
+        50% {
+            transform: scaleY(0.12);
+        }
+    }
+
+    /* 3. Mascot Happy Wave / Bounce on Hover */
+    @keyframes aiMascotWave {
+        0%, 100% { transform: rotate(0deg) scale(1); }
+        20% { transform: rotate(-8deg) scale(1.08); }
+        40% { transform: rotate(8deg) scale(1.08); }
+        60% { transform: rotate(-4deg) scale(1.05); }
+        80% { transform: rotate(4deg) scale(1.02); }
+    }
+
+    /* 4. Launcher Hover Interactions */
+    /* Jembatan hover transparan: mencegah flicker kursor saat melintas antara tombol dan tooltip */
+    #ai-launcher-tooltip::before {
+        content: '';
+        position: absolute;
+        right: -24px;
+        top: -12px;
+        bottom: -12px;
+        width: 30px;
+        background: transparent;
+    }
+
+    #ai-assistant-toggle-btn:focus,
+    #ai-assistant-toggle-btn:active {
+        outline: none !important;
+        box-shadow: 0 6px 20px rgba(45, 138, 186, 0.28) !important;
+    }
+
+    #ai-assistant-toggle-btn:focus-visible {
+        outline: none !important;
+    }
+
+    #ai-launcher-wrapper:hover #ai-launcher-tooltip {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateY(-50%) translateX(0) !important;
+        pointer-events: auto !important;
+    }
+
+    #ai-launcher-wrapper:hover #ai-assistant-toggle-btn {
+        transform: scale(1.06);
+        box-shadow: 0 8px 26px rgba(45, 138, 186, 0.38) !important;
+    }
+
+    #ai-launcher-wrapper:hover .ai-mascot-floating {
+        animation: aiMascotWave 0.65s ease-in-out !important;
+    }
+
+    /* 5. Chat Open States */
+    #ai-launcher-wrapper.chat-open #ai-launcher-tooltip {
+        display: none !important;
+    }
+
+    #ai-launcher-wrapper.chat-open #ai-assistant-toggle-btn {
+        background-color: #2d8aba !important;
+        border-color: #2d8aba !important;
+        transform: none !important;
+        box-shadow: 0 4px 14px rgba(45, 138, 186, 0.35) !important;
+    }
 </style>
 
 <!-- JAVASCRIPT LOGIC FOR FLOATING CLINIC ASSISTANT -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const launcherWrapper = document.getElementById('ai-launcher-wrapper');
+    const launcherTooltip = document.getElementById('ai-launcher-tooltip');
     const toggleBtn = document.getElementById('ai-assistant-toggle-btn');
-    const iconOpen = document.getElementById('ai-assistant-icon-open');
+    const mascotAvatar = document.getElementById('ai-mascot-avatar');
     const iconClose = document.getElementById('ai-assistant-icon-close');
     const chatWindow = document.getElementById('ai-assistant-window');
     const closeWindowBtn = document.getElementById('ai-assistant-close-window-btn');
@@ -290,19 +475,24 @@ document.addEventListener('DOMContentLoaded', function () {
         isChatOpen = !isChatOpen;
         if (isChatOpen) {
             chatWindow.classList.remove('d-none');
-            iconOpen.style.display = 'none';
-            iconClose.style.display = 'flex';
+            if (launcherWrapper) launcherWrapper.classList.add('chat-open');
+            if (mascotAvatar) mascotAvatar.style.display = 'none';
+            if (iconClose) iconClose.style.display = 'flex';
             setTimeout(() => input.focus(), 150);
             scrollToBottom();
         } else {
             chatWindow.classList.add('d-none');
-            iconOpen.style.display = 'flex';
-            iconClose.style.display = 'none';
+            if (launcherWrapper) launcherWrapper.classList.remove('chat-open');
+            if (mascotAvatar) mascotAvatar.style.display = 'flex';
+            if (iconClose) iconClose.style.display = 'none';
             toggleBtn.focus();
         }
     }
 
     toggleBtn.addEventListener('click', toggleChat);
+    if (launcherTooltip) {
+        launcherTooltip.addEventListener('click', toggleChat);
+    }
     closeWindowBtn.addEventListener('click', toggleChat);
 
     // Close on Escape key (R-32 Accessibility)
@@ -489,8 +679,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const aiMsgGroupHtml = `
             <div class="ai-msg-group" style="display: flex; gap: 10px; max-width: 92%;">
-                <div style="width: 30px; height: 30px; border-radius: 50%; background: #2d8aba; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; margin-top: 2px;">
-                    <i class="bi bi-chat-heart-fill"></i>
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #ffffff; border: 1.5px solid #2d8aba; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; box-shadow: 0 2px 6px rgba(45, 138, 186, 0.15);">
+                    <svg width="22" height="22" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="10" width="32" height="28" rx="10" fill="#e0f2fe" stroke="#2d8aba" stroke-width="2.5"/>
+                        <rect x="4" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+                        <rect x="40" y="18" width="4" height="12" rx="2" fill="#2d8aba"/>
+                        <rect x="12" y="14" width="24" height="17" rx="6" fill="#0f172a"/>
+                        <rect x="16" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                        <rect x="27.5" y="18.5" width="4.5" height="7" rx="2.2" fill="#38bdf8"/>
+                        <circle cx="15" cy="27" r="1.5" fill="#f472b6"/>
+                        <circle cx="33" cy="27" r="1.5" fill="#f472b6"/>
+                        <path d="M21.5 26.5C22.5 28 25.5 28 26.5 26.5" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+                        <rect x="22.5" y="40" width="3" height="5" rx="1" fill="#2d8aba"/>
+                        <rect x="21.5" y="41" width="5" height="3" rx="1" fill="#2d8aba"/>
+                    </svg>
                 </div>
                 <div style="flex: 1;">
                     <div class="ai-response-msg">
