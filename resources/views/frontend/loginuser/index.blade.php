@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assyavetclinic - Login / Register</title>
+    <title>assyavetclinic.com - Login / Register</title>
+    <!-- Favicon -->
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="48x48" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('logo-web.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-web.png') }}">
+
     <!-- Google Fonts Link For Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0">
 
     <link rel="stylesheet" href="{{ asset('assets/frontend/css/loginregis.css') }}">
-    
-
 </head>
 <body>
    <!--// Services Section Start //-->
