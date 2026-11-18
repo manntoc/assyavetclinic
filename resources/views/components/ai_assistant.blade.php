@@ -14,31 +14,31 @@
     </button>
 
     <!-- 2. CHAT DRAWER / WINDOW MODAL -->
-    <div id="ai-assistant-window" class="d-none" role="dialog" aria-modal="true" aria-labelledby="ai-window-title" style="position: fixed; bottom: 88px; right: 24px; width: 400px; max-width: calc(100vw - 32px); height: min(560px, calc(100vh - 110px)); background: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); border: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow: hidden; animation: aiDrawerSlideUp 0.25s ease-out; z-index: 99998;">
+    <div id="ai-assistant-window" class="d-none" role="dialog" aria-modal="true" aria-labelledby="ai-window-title" style="position: fixed; bottom: 88px; right: 24px; width: 420px; max-width: calc(100vw - 28px); height: min(580px, calc(100vh - 110px)); background: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); border: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow: hidden; animation: aiDrawerSlideUp 0.25s ease-out; z-index: 99998;">
         
         <!-- CHAT HEADER -->
-        <div id="ai-chat-header" style="background-color: #2d8aba; padding: 14px 18px; color: #ffffff; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.15); transition: background-color 0.25s ease;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+        <div id="ai-chat-header" style="background-color: #2d8aba; padding: 12px 16px; color: #ffffff; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.15); transition: background-color 0.25s ease; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     <i id="ai-header-icon" class="bi bi-chat-heart-fill" style="font-size: 18px; color: #ffffff; line-height: 1; display: flex; align-items: center; justify-content: center;"></i>
                 </div>
-                <div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <h6 id="ai-window-title" style="margin: 0; font-size: 14px; font-weight: 700; color: #ffffff;">Asisten Klinik Assyavet</h6>
-                        <span id="ai-skill-badge" class="badge d-none" style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.3px;"></span>
+                <div style="min-width: 0; flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+                        <h6 id="ai-window-title" style="margin: 0; font-size: 13.5px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Asisten Klinik Assyavet</h6>
+                        <span id="ai-skill-badge" class="badge d-none" style="font-size: 9.5px; font-weight: 600; padding: 2px 7px; border-radius: 8px; background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0;"></span>
                     </div>
-                    <small id="ai-window-subtitle" style="font-size: 11px; color: rgba(255, 255, 255, 0.9); display: flex; align-items: center; gap: 4px;">
-                        <span style="width: 7px; height: 7px; background-color: #34d399; border-radius: 50%; display: inline-block;"></span>
-                        <span id="ai-subtitle-text">Pencarian Data &amp; Panduan Prosedur</span>
+                    <small id="ai-window-subtitle" style="font-size: 11px; color: rgba(255, 255, 255, 0.9); display: flex; align-items: center; gap: 4px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <span style="width: 7px; height: 7px; background-color: #34d399; border-radius: 50%; display: inline-block; flex-shrink: 0;"></span>
+                        <span id="ai-subtitle-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Pencarian Data &amp; Panduan Prosedur</span>
                     </small>
                 </div>
             </div>
             
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <button type="button" id="ai-assistant-reset-btn" title="Bersihkan Chat / Mode Umum" aria-label="Bersihkan Riwayat Chat atau Reset Mode" style="background: transparent; border: none; color: rgba(255,255,255,0.85); cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'">
+            <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                <button type="button" id="ai-assistant-reset-btn" title="Bersihkan Chat / Mode Umum" aria-label="Bersihkan Riwayat Chat atau Reset Mode" style="background: transparent; border: none; color: rgba(255,255,255,0.85); cursor: pointer; padding: 5px 7px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'">
                     <i class="bi bi-arrow-counterclockwise" style="font-size: 16px;"></i>
                 </button>
-                <button type="button" id="ai-assistant-close-window-btn" title="Tutup" aria-label="Tutup Asisten Klinik" style="background: transparent; border: none; color: rgba(255,255,255,0.85); cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'">
+                <button type="button" id="ai-assistant-close-window-btn" title="Tutup" aria-label="Tutup Asisten Klinik" style="background: transparent; border: none; color: rgba(255,255,255,0.85); cursor: pointer; padding: 5px 7px; border-radius: 6px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'">
                     <i class="bi bi-x-lg" style="font-size: 16px;"></i>
                 </button>
             </div>
@@ -211,13 +211,19 @@
     .ai-user-msg {
         background: #2d8aba;
         color: #ffffff;
-        padding: 10px 14px;
+        padding: 9px 14px;
         border-radius: 14px;
         border-top-right-radius: 2px;
         font-size: 13px;
-        max-width: 88%;
-        margin-left: auto;
-        word-break: break-word;
+        max-width: 82%;
+        width: fit-content;
+        min-width: 44px;
+        box-sizing: border-box;
+        word-break: normal;
+        overflow-wrap: break-word;
+        white-space: pre-wrap;
+        line-height: 1.45;
+        display: inline-block;
     }
 
     .ai-response-msg {
@@ -229,6 +235,8 @@
         font-size: 13px;
         color: #1e293b;
         line-height: 1.55;
+        word-break: normal;
+        overflow-wrap: break-word;
     }
 
     .ai-result-card {
@@ -354,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function sendQuery(queryText) {
         // Append User Message
         const userMsgHtml = `
-            <div style="margin-left: auto; max-width: 88%;">
+            <div style="display: flex; justify-content: flex-end; width: 100%;">
                 <div class="ai-user-msg">${escapeHtml(queryText)}</div>
             </div>
         `;
@@ -414,13 +422,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (data.active_skill) {
             if (skillBadge) {
                 skillBadge.classList.remove('d-none');
-                skillBadge.textContent = data.skill_title || data.active_skill;
+                skillBadge.textContent = '/' + data.active_skill;
             }
             if (subtitleText) {
-                subtitleText.textContent = 'Mode Spesialis: ' + (data.skill_title || data.active_skill);
+                subtitleText.textContent = 'Mode: ' + (data.skill_title || data.active_skill);
             }
             if (input) {
-                input.placeholder = `Mode ${data.skill_title || data.active_skill}: Ketik pertanyaan atau /general...`;
+                input.placeholder = `Tanya spesialis ${data.active_skill} (atau /general)...`;
             }
 
             const activeChip = document.querySelector(`.ai-skill-chip[data-cmd="/${data.active_skill}"]`);
