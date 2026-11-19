@@ -397,10 +397,12 @@ async function doPublish() {
     setLoading(btn, true);
 
     try {
-        if (typeof html2canvas !== 'undefined') {
-            showToast('Sedang merender seluruh canvas slide...', 'info');
-            await renderAllSlidesCanvas();
+        if (typeof html2canvas === 'undefined') {
+            throw new Error('Pustaka html2canvas belum termuat. Coba refresh browser Anda.');
         }
+
+        showToast('Sedang merender seluruh canvas slide ke 1080x1350...', 'info');
+        await renderAllSlidesCanvas(true);
 
         showToast('Sedang mengirim ke Instagram...', 'info');
         const res = await apiFetch(route('publish'), 'POST');
@@ -418,7 +420,29 @@ async function doPublish() {
     }
 }
 
-async function renderAllSlidesCanvas() {
+async function inlineAllImages(container) {
+    const images = Array.from(container.querySelectorAll('img'));
+    for (const img of images) {
+        if (!img.src || img.src.startsWith('data:')) continue;
+        try {
+            const res = await fetch(img.src, { mode: 'cors' });
+            if (!res.ok) continue;
+            const blob = await res.blob();
+            await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    img.src = reader.result;
+                    resolve();
+                };
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            console.warn('Could not inline image:', img.src, e);
+        }
+    }
+}
+
+async function renderAllSlidesCanvas(throwOnError = false) {
     const slidePreviews = Array.from(document.querySelectorAll('.ig-slide-preview'));
     if (!slidePreviews.length) return;
 
@@ -427,6 +451,8 @@ async function renderAllSlidesCanvas() {
         const slideId = wrap.dataset.slideId;
         const canvasEl = wrap.querySelector('.ig-canvas') || wrap.firstElementChild;
         if (!canvasEl || !slideId) continue;
+
+        showToast(`Merender slide ${i + 1}/${slidePreviews.length}...`, 'info');
 
         const origDisplay  = wrap.style.display;
         const origPosition = wrap.style.position;
@@ -442,7 +468,8 @@ async function renderAllSlidesCanvas() {
         wrap.style.width    = '540px';
         wrap.style.zIndex   = '-9999';
 
-        await new Promise(r => setTimeout(r, 80));
+        await new Promise(r => setTimeout(r, 60));
+        await inlineAllImages(canvasEl);
 
         try {
             // Render exact 1080x1350 px (Instagram Portrait standard 4:5 ratio)
@@ -451,16 +478,20 @@ async function renderAllSlidesCanvas() {
                 width: 540,
                 height: 675,
                 useCORS: true,
-                allowTaint: true,
-                backgroundColor: null,
+                allowTaint: false,
+                backgroundColor: '#ffffff',
                 logging: false,
             });
 
             const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
             const saveUrl = route('saveRendered', { slideId: slideId });
-            await apiFetch(saveUrl, 'POST', { image: dataUrl });
+            const res = await apiFetch(saveUrl, 'POST', { image: dataUrl });
+            if (!res.success && throwOnError) {
+                throw new Error(res.error || 'Server gagal menyimpan hasil render slide ' + (i + 1));
+            }
         } catch (e) {
             console.error('Error rendering slide #' + slideId, e);
+            if (throwOnError) throw e;
         } finally {
             wrap.style.display  = origDisplay;
             wrap.style.position = origPosition;
@@ -471,6 +502,28 @@ async function renderAllSlidesCanvas() {
         }
     }
 }
+
+// ─── Button: Render Semua Slide (1080x1350) ───────────────────────────────────
+document.getElementById('btn-render-all-slides')?.addEventListener('click', async function() {
+    const btn = this;
+    setLoading(btn, true);
+    try {
+        if (typeof html2canvas === 'undefined') {
+            throw new Error('Pustaka html2canvas belum termuat. Coba refresh browser Anda.');
+        }
+        await renderAllSlidesCanvas(true);
+        showToast('Semua slide berhasil dirender ke gambar 1080x1350!', 'success');
+        const statusText = document.getElementById('render-status-text');
+        if (statusText) {
+            statusText.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i><strong>Semua slide sudah siap dipublish!</strong> (1080x1350)';
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Gagal merender slide: ' + (err.message || err), 'error');
+    } finally {
+        setLoading(btn, false);
+    }
+});
 
 // ─── Download Active Slide as 1080x1350 Image ────────────────────────────────
 document.getElementById('btn-download-slide')?.addEventListener('click', async function() {
@@ -499,7 +552,8 @@ document.getElementById('btn-download-slide')?.addEventListener('click', async f
     activeSlide.style.zIndex = '-9999';
     activeSlide.style.display = 'block';
 
-    await new Promise(r => setTimeout(r, 80));
+    await new Promise(r => setTimeout(r, 60));
+    await inlineAllImages(canvasEl);
 
     try {
         const canvas = await html2canvas(canvasEl, {
@@ -507,8 +561,8 @@ document.getElementById('btn-download-slide')?.addEventListener('click', async f
             width: 540,
             height: 675,
             useCORS: true,
-            allowTaint: true,
-            backgroundColor: null,
+            allowTaint: false,
+            backgroundColor: '#ffffff',
             logging: false,
         });
 
@@ -520,7 +574,7 @@ document.getElementById('btn-download-slide')?.addEventListener('click', async f
         showToast('Gambar slide 1080x1350 berhasil didownload!', 'success');
     } catch (err) {
         console.error(err);
-        showToast('Gagal mendownload gambar slide.', 'error');
+        showToast('Gagal mendownload gambar slide: ' + (err.message || err), 'error');
     } finally {
         activeSlide.style.width = origWidth;
         activeSlide.style.position = origPosition;

@@ -508,14 +508,31 @@ class InstagramContentController extends Controller
             ], 422);
         }
 
-        // Kumpulkan URL publik gambar tiap slide (prioritaskan rendered_path canvas utuh)
-        $imageUrls = $content->slides
-            ->sortBy('slide_number')
-            ->filter(fn($s) => !empty($s->rendered_path) || !empty($s->image_path))
-            ->map(fn($s) => $s->image_url)          // accessor: rendered_path ?: image_path
-            ->filter(fn($u) => !empty($u))
-            ->values()
-            ->toArray();
+        // Kumpulkan URL gambar canvas utuh yang sudah dirender (wajib rendered_path)
+        $imageUrls = [];
+        $unrenderedSlides = [];
+
+        foreach ($content->slides->sortBy('slide_number') as $slide) {
+            if (!empty($slide->rendered_path)) {
+                $imageUrls[] = asset('storage/' . ltrim($slide->rendered_path, '/'));
+            } else {
+                $unrenderedSlides[] = $slide->slide_number;
+            }
+        }
+
+        if (!empty($unrenderedSlides)) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Slide ' . implode(', ', $unrenderedSlides) . ' belum dirender ke gambar canvas. Silakan klik tombol "Render Semua Slide (1080x1350)" terlebih dahulu.',
+            ], 422);
+        }
+
+        if (empty($imageUrls)) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Tidak ada slide gambar yang siap dipublish.',
+            ], 422);
+        }
 
         $caption = trim(($content->caption ?? '') . "
 

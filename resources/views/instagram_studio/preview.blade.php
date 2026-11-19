@@ -344,6 +344,28 @@
                             <i class="bi bi-floppy2 me-1"></i>Simpan sebagai Draft
                         </button>
 
+                        {{-- Render All Slides Button --}}
+                        <button class="btn btn-primary" id="btn-render-all-slides" style="background:#2d8aba;border-color:#2d8aba;border-radius:8px;"
+                                title="Render semua slide menjadi gambar 1080x1350 utuh">
+                            <i class="bi bi-magic me-1"></i>Render Semua Slide (1080x1350)
+                        </button>
+
+                        <div id="render-status-badge" class="text-center p-2 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:0.75rem;">
+                            @php
+                                $renderedCount = $content->slides->whereNotNull('rendered_path')->count();
+                                $totalSlideCount = $content->slides->count();
+                            @endphp
+                            <span id="render-status-text" class="text-muted">
+                                @if($renderedCount === $totalSlideCount && $totalSlideCount > 0)
+                                    <i class="bi bi-check-circle-fill text-success me-1"></i><strong>Semua {{ $totalSlideCount }} slide sudah siap</strong> (1080x1350)
+                                @elseif($renderedCount > 0)
+                                    <i class="bi bi-clock-history text-warning me-1"></i>{{ $renderedCount }} dari {{ $totalSlideCount }} slide sudah dirender
+                                @else
+                                    <i class="bi bi-info-circle text-info me-1"></i>Belum dirender ke gambar canvas
+                                @endif
+                            </span>
+                        </div>
+
                         {{-- Download Active Slide Image --}}
                         <button class="btn btn-outline-info" id="btn-download-slide" style="border-radius:8px;"
                                 title="Download slide aktif sebagai gambar 1080x1350 (4:5)">
@@ -456,6 +478,6 @@ const BRAND = @json($brand);
 const CONTENT_STATUS = '{{ $content->status }}';
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="{{ asset('js/instagram_studio.js') }}"></script>
+<script src="{{ asset('js/instagram_studio.js') }}?v={{ time() }}"></script>
 
 @endsection
