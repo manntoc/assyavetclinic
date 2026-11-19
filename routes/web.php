@@ -632,10 +632,23 @@ Route::middleware(['auth', 'akses:admin|superadmin'])->prefix('instagram-studio'
     Route::post('/token/refresh',                    [InstagramContentController::class, 'refreshToken'])   ->name('token-refresh');
 });
 
-require __DIR__ . '/auth.php';
+// Serve Instagram storage assets directly without requiring storage symlink on cPanel/shared hosting
+Route::get('/storage/instagram/{path}', function ($path) {
+    $filePath = storage_path('app/public/instagram/' . $path);
+    if (file_exists($filePath)) {
+        $mimeType = @mime_content_type($filePath) ?: 'image/jpeg';
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+    abort(404);
+})->where('path', '.*')->name('instagram.storage.asset');
 
-Route::any('{catchall}', [ErrorPageController::class, 'not_found'])->where('catchall', '.*');
+require __DIR__ . '/auth.php';
 
 Route::get('/privacy-policy', function () {
     return view('privacy_policy');
 })->name('privacy.policy');
+
+Route::any('{catchall}', [ErrorPageController::class, 'not_found'])->where('catchall', '.*');

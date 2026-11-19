@@ -13,7 +13,14 @@ class NineRouterService
 
     public function __construct()
     {
-        $this->apiKey = config('services.ninerouter.api_key') ?: env('AI_API_KEY', env('NINEROUTER_API_KEY', ''));
+        $this->apiKey = trim(
+            (string) (config('services.ninerouter.api_key') 
+            ?: config('ai.providers.ninerouter.api_key') 
+            ?: env('AI_API_KEY') 
+            ?: env('GERAIKITA_API_KEY') 
+            ?: env('GK_API_KEY') 
+            ?: env('NINEROUTER_API_KEY', ''))
+        );
         $baseUrl = config('services.ninerouter.base_url') ?: env('AI_BASE_URL', env('NINEROUTER_BASE_URL', 'https://ai.geraikita.com/v1'));
         if (str_contains($baseUrl, 'localhost:20128')) {
             $baseUrl = 'https://ai.geraikita.com/v1';
@@ -32,6 +39,10 @@ class NineRouterService
      */
     public function chatCompletion(array $messages, ?string $model = null, array $options = []): array
     {
+        if (empty($this->apiKey)) {
+            throw new Exception("AI API Key belum diisi di file .env server cPanel. Silakan buka cPanel File Manager > edit file .env dan isi: AI_API_KEY=gk-...");
+        }
+
         $model = $model ?: config('ai.default_model', 'deepseek-v4.1-flash');
         $endpoint = "{$this->baseUrl}/chat/completions";
 
@@ -44,8 +55,9 @@ class NineRouterService
         try {
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$this->apiKey}",
+                'x-api-key'     => $this->apiKey,
                 'Content-Type'  => 'application/json',
-            ])->timeout(30)->post($endpoint, $payload);
+            ])->timeout(45)->post($endpoint, $payload);
 
             if ($response->successful()) {
                 $data = $response->json();

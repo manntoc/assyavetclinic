@@ -21,7 +21,14 @@ class InstagramImageGenerator
     public function __construct(NineRouterService $ai)
     {
         $this->ai      = $ai;
-        $this->apiKey  = config('services.ninerouter.api_key') ?: env('AI_API_KEY', env('NINEROUTER_API_KEY', ''));
+        $this->apiKey  = trim(
+            (string) (config('services.ninerouter.api_key') 
+            ?: config('ai.providers.ninerouter.api_key') 
+            ?: env('AI_API_KEY') 
+            ?: env('GERAIKITA_API_KEY') 
+            ?: env('GK_API_KEY') 
+            ?: env('NINEROUTER_API_KEY', ''))
+        );
         $baseUrl       = config('services.ninerouter.base_url') ?: env('AI_BASE_URL', env('NINEROUTER_BASE_URL', 'https://ai.geraikita.com/v1'));
         if (str_contains($baseUrl, 'localhost:20128')) {
             $baseUrl = 'https://ai.geraikita.com/v1';
@@ -39,12 +46,18 @@ class InstagramImageGenerator
         string $imagePrompt,
         string $size = '1024x1024'
     ): ?string {
+        if (empty($this->apiKey)) {
+            Log::error('InstagramImageGenerator: AI_API_KEY belum diisi di .env cPanel');
+            return null;
+        }
+
         $prompt = $this->sanitizePrompt($imagePrompt);
 
         try {
             $imageModel = config('ai.image_model', env('AI_IMAGE_MODEL', 'flux-2-flex'));
             $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'Authorization' => "Bearer {$this->apiKey}",
+                'x-api-key'     => $this->apiKey,
                 'Content-Type'  => 'application/json',
             ])->timeout(60)->post("{$this->baseUrl}/images/generations", [
                 'model'           => $imageModel,
