@@ -42,11 +42,12 @@
 
 /* ── Brand Component: Logo (NEVER stretch, NEVER squash) ────────────────────── */
 .ig-brand-logo {
-    height:28px;
+    height:30px;
     width:auto;
+    max-height:34px;
+    max-width:50%;
     object-fit:contain;
     display:block;
-    max-width:55%;
 }
 .ig-brand-text-fallback { display:flex; flex-direction:column; line-height:1.1; }
 .ig-brand-title { font-size:.88rem; font-weight:800; color:var(--ig-navy); letter-spacing:-.3px; }
@@ -324,15 +325,15 @@
                     <div class="mb-3 pb-2 border-bottom">
                         <div class="d-flex align-items-center justify-content-between text-muted" style="font-size:0.75rem;">
                             <span class="fw-bold {{ in_array($content->status, ['draft', 'generated']) ? 'text-primary' : (in_array($content->status, ['review', 'approved', 'published']) ? 'text-success' : '') }}">
-                                <i class="bi {{ in_array($content->status, ['review', 'approved', 'published']) ? 'bi-check-circle-fill text-success' : 'bi-1-circle-fill' }} me-1"></i>1. Konten
+                                <i class="bi {{ in_array($content->status, ['review', 'approved', 'published']) ? 'bi-check-circle-fill text-success' : 'bi-1-circle-fill' }} me-1"></i>Konten
                             </span>
                             <i class="bi bi-chevron-right text-muted" style="font-size:0.65rem;"></i>
                             <span class="fw-bold {{ $content->status === 'review' ? 'text-warning' : (in_array($content->status, ['approved', 'published']) ? 'text-success' : '') }}">
-                                <i class="bi {{ in_array($content->status, ['approved', 'published']) ? 'bi-check-circle-fill text-success' : 'bi-2-circle-fill' }} me-1"></i>2. Review
+                                <i class="bi {{ in_array($content->status, ['approved', 'published']) ? 'bi-check-circle-fill text-success' : 'bi-2-circle-fill' }} me-1"></i>Review
                             </span>
                             <i class="bi bi-chevron-right text-muted" style="font-size:0.65rem;"></i>
                             <span class="fw-bold {{ in_array($content->status, ['approved', 'published']) ? 'text-success' : '' }}">
-                                <i class="bi {{ $content->status === 'published' ? 'bi-check-circle-fill text-success' : 'bi-3-circle-fill' }} me-1"></i>3. Publish
+                                <i class="bi {{ $content->status === 'published' ? 'bi-check-circle-fill text-success' : 'bi-3-circle-fill' }} me-1"></i>Publish
                             </span>
                         </div>
                     </div>

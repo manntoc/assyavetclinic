@@ -446,6 +446,19 @@ async function inlineAllImages(container) {
                 dataUrl = await cropImageToCover(dataUrl, rect.width, rect.height);
             }
 
+            // For logo, lock width & height explicitly to its natural aspect ratio to prevent html2canvas stretching
+            if (img.classList.contains('ig-brand-logo') || img.closest('.ig-brand-lockup')) {
+                const nw = img.naturalWidth;
+                const nh = img.naturalHeight;
+                if (nw && nh && nh > 0) {
+                    const naturalAr = nw / nh;
+                    const renderedH = img.clientHeight || 30;
+                    img.style.width  = Math.round(renderedH * naturalAr) + 'px';
+                    img.style.height = renderedH + 'px';
+                    img.style.maxWidth = 'none';
+                }
+            }
+
             img.src = dataUrl;
         } catch (e) {
             console.warn('Could not inline or crop image:', img.src, e);
@@ -506,9 +519,17 @@ async function captureSlideCanvas(wrap) {
     // Kunci rasio tepat 4:5 portrait (1350 / 1080 = 1.25)
     const targetHeight = Math.round(curWidth * 1.25);
 
-    const origHeight    = canvasEl.style.height;
-    const origMinHeight = canvasEl.style.minHeight;
-    const origMaxHeight = canvasEl.style.maxHeight;
+    const origHeight       = canvasEl.style.height;
+    const origMinHeight    = canvasEl.style.minHeight;
+    const origMaxHeight    = canvasEl.style.maxHeight;
+    const origBorderRadius = canvasEl.style.borderRadius;
+    const origBoxShadow    = canvasEl.style.boxShadow;
+    const origBorder       = canvasEl.style.border;
+
+    // Hapus rounded corner, shadow, dan border agar background mengisi penuh ke sudut (0px border-radius)
+    canvasEl.style.borderRadius = '0px';
+    canvasEl.style.boxShadow    = 'none';
+    canvasEl.style.border       = 'none';
 
     // Kunci ukuran tepat pada rasio 4:5 sebelum di-snapshot
     canvasEl.style.height    = targetHeight + 'px';
@@ -525,7 +546,7 @@ async function captureSlideCanvas(wrap) {
             scale: scale,
             useCORS: true,
             allowTaint: false,
-            backgroundColor: '#ffffff',
+            backgroundColor: null,
             logging: false,
         });
 
@@ -534,15 +555,16 @@ async function captureSlideCanvas(wrap) {
         finalCanvas.width = 1080;
         finalCanvas.height = 1350;
         const ctx = finalCanvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 1080, 1350);
         ctx.drawImage(capturedCanvas, 0, 0, 1080, 1350);
 
         return finalCanvas.toDataURL('image/jpeg', 0.95);
     } finally {
-        canvasEl.style.height    = origHeight;
-        canvasEl.style.minHeight = origMinHeight;
-        canvasEl.style.maxHeight = origMaxHeight;
+        canvasEl.style.borderRadius = origBorderRadius;
+        canvasEl.style.boxShadow    = origBoxShadow;
+        canvasEl.style.border       = origBorder;
+        canvasEl.style.height       = origHeight;
+        canvasEl.style.minHeight    = origMinHeight;
+        canvasEl.style.maxHeight    = origMaxHeight;
     }
 }
 

@@ -21,7 +21,6 @@
                 src="{{ $logoSrc }}"
                 alt="{{ $clinicName }}"
                 class="ig-brand-logo"
-                style="aspect-ratio: {{ $logoAr }};"
                 loading="eager"
             >
         @else

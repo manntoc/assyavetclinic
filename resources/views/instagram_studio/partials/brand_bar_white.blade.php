@@ -20,7 +20,7 @@
                 src="{{ $logoSrc }}"
                 alt="{{ $clinicName }}"
                 class="ig-brand-logo"
-                style="aspect-ratio: {{ $logoAr }}; {{ $useFilter ? 'filter:brightness(0) invert(1);' : '' }}"
+                style="{{ $useFilter ? 'filter:brightness(0) invert(1);' : '' }}"
                 loading="eager"
             >
         @else
