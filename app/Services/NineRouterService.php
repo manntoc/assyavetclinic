@@ -26,8 +26,9 @@ class NineRouterService
      * @return array
      * @throws Exception
      */
-    public function chatCompletion(array $messages, string $model = 'gpt-4o', array $options = []): array
+    public function chatCompletion(array $messages, ?string $model = null, array $options = []): array
     {
+        $model = $model ?: config('ai.default_model', 'deepseek-v4.1-flash');
         $endpoint = "{$this->baseUrl}/chat/completions";
 
         $payload = array_merge([

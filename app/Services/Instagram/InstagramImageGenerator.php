@@ -38,11 +38,12 @@ class InstagramImageGenerator
         $prompt = $this->sanitizePrompt($imagePrompt);
 
         try {
+            $imageModel = config('ai.image_model', env('AI_IMAGE_MODEL', 'flux-2-flex'));
             $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'Authorization' => "Bearer {$this->apiKey}",
                 'Content-Type'  => 'application/json',
             ])->timeout(60)->post("{$this->baseUrl}/images/generations", [
-                'model'           => 'kryptous-project',
+                'model'           => $imageModel,
                 'prompt'          => $prompt,
                 'n'               => 1,
                 'size'            => $size,

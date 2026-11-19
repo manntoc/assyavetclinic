@@ -178,8 +178,7 @@ PROMPT;
     {
         $configured = config('ai.default_model', '');
 
-        // Prefer configured if it looks like a 9Router-style ID (not bare "gpt-4o")
-        if ($configured && str_contains($configured, '/')) {
+        if (!empty($configured)) {
             return $configured;
         }
 

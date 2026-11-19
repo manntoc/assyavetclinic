@@ -8,9 +8,11 @@ return [
     */
     'default_provider' => env('AI_PROVIDER', 'ninerouter'),
 
-    'default_model' => env('AI_MODEL', 'gpt-4o'),
+    'default_model' => env('AI_MODEL', 'deepseek-v4.1-flash'),
 
-    'timeout' => env('AI_TIMEOUT', 30),
+    'image_model' => env('AI_IMAGE_MODEL', 'flux-2-flex'),
+
+    'timeout' => env('AI_TIMEOUT', 60),
 
     /*
     |--------------------------------------------------------------------------
@@ -20,8 +22,8 @@ return [
     'providers' => [
         'ninerouter' => [
             'class' => \App\AI\Providers\NineRouterProvider::class,
-            'api_key' => env('NINEROUTER_API_KEY', ''),
-            'base_url' => env('NINEROUTER_BASE_URL', 'http://localhost:20128/v1'),
+            'api_key' => env('AI_API_KEY', env('NINEROUTER_API_KEY', '')),
+            'base_url' => env('AI_BASE_URL', env('NINEROUTER_BASE_URL', 'http://localhost:20128/v1')),
         ],
         'openai' => [
             'class' => \App\AI\Providers\OpenAIProvider::class,

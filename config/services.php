@@ -31,8 +31,8 @@ return [
     ],
 
     'ninerouter' => [
-        'api_key' => env('NINEROUTER_API_KEY'),
-        'base_url' => env('NINEROUTER_BASE_URL', 'http://localhost:20128/v1'),
+        'api_key' => env('AI_API_KEY', env('NINEROUTER_API_KEY')),
+        'base_url' => env('AI_BASE_URL', env('NINEROUTER_BASE_URL', 'http://localhost:20128/v1')),
     ],
 
     'instagram' => [
