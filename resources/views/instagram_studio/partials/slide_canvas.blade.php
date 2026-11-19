@@ -93,17 +93,22 @@
     };
 
     // ── Parse body → bullet points ─────────────────────────────────────────
-    $points = array_values(array_filter(
+    $rawPoints = array_values(array_filter(
         array_map('trim', preg_split('/[\r\n]+/', $body)),
         fn($l) => strlen($l) > 0
     ));
-    if (count($points) <= 1 && strlen($body) > 0) {
-        $points = array_values(array_filter(
+    if (count($rawPoints) <= 1 && strlen($body) > 0) {
+        $rawPoints = array_values(array_filter(
             array_map('trim', preg_split('/(?<=[.!?])\s+/', $body)),
             fn($l) => strlen($l) > 3
         ));
     }
-    if (count($points) === 0) $points = $body ? [$body] : [''];
+    if (count($rawPoints) === 0) $rawPoints = $body ? [$body] : [''];
+
+    // Bersihkan prefix nomor kaku ("No. 1:", "1.", "1 -", dll) agar tidak redundant dengan nomor badge template
+    $points = array_map(function($pt) {
+        return preg_replace('/^(no\.?\s*\d+[\s:\.\-]+|\d+[\s:\.\-]+|poin\s*\d+[\s:\.\-]+|[•\-\*]\s*)/i', '', trim($pt));
+    }, $rawPoints);
 
     // ── Normalize layout — handle legacy values ───────────────────────────
     $legacyMap = [
@@ -193,9 +198,19 @@
 
         <div class="ig-nf-points">
             @foreach(array_slice($points, 0, 4) as $i => $pt)
+                @php
+                    $parts = explode(':', $pt, 2);
+                    $hasKey = count($parts) === 2 && strlen($parts[0]) <= 35;
+                @endphp
                 <div class="ig-nf-point">
                     <span class="ig-nf-num">{{ $i + 1 }}</span>
-                    <span class="ig-nf-pt-text">{{ $pt }}</span>
+                    <span class="ig-nf-pt-text">
+                        @if($hasKey)
+                            <strong style="color:#ffffff;">{{ trim($parts[0]) }}:</strong> {{ trim($parts[1]) }}
+                        @else
+                            {{ $pt }}
+                        @endif
+                    </span>
                 </div>
             @endforeach
         </div>
@@ -226,9 +241,19 @@
     {{-- Content Layer: Blue panel --}}
     <div class="ig-wtb-panel">
         @foreach(array_slice($points, 0, 3) as $i => $pt)
+            @php
+                $parts = explode(':', $pt, 2);
+                $hasKey = count($parts) === 2 && strlen($parts[0]) <= 35;
+            @endphp
             <div class="ig-wtb-point">
-                <div class="ig-wtb-num">No. {{ $i + 1 }}</div>
-                <div class="ig-wtb-text">{{ $pt }}</div>
+                <div class="ig-wtb-num">#{{ $i + 1 }}</div>
+                <div class="ig-wtb-text">
+                    @if($hasKey)
+                        <strong style="color:#ffffff;">{{ trim($parts[0]) }}:</strong> {{ trim($parts[1]) }}
+                    @else
+                        {{ $pt }}
+                    @endif
+                </div>
             </div>
         @endforeach
 
@@ -259,11 +284,22 @@
         @endphp
         <div class="ig-cg-grid">
             @foreach($cardPoints as $i => $pt)
+                @php
+                    $parts = explode(':', $pt, 2);
+                    $hasKey = count($parts) === 2 && strlen($parts[0]) <= 30;
+                @endphp
                 <div class="ig-cg-card" style="--card-accent: {{ $cardColors[$i % 4] }};">
                     <div class="ig-cg-card-icon" style="color: {{ $cardColors[$i % 4] }};">
                         <i class="bi {{ $cardIcons[$i % 4] }}"></i>
                     </div>
-                    <div class="ig-cg-card-text">{{ $pt }}</div>
+                    <div class="ig-cg-card-text">
+                        @if($hasKey)
+                            <strong style="color:var(--ig-navy);display:block;margin-bottom:2px;font-size:0.75rem;">{{ trim($parts[0]) }}</strong>
+                            <span>{{ trim($parts[1]) }}</span>
+                        @else
+                            {{ $pt }}
+                        @endif
+                    </div>
                 </div>
             @endforeach
         </div>
