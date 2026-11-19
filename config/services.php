@@ -36,10 +36,10 @@ return [
     ],
 
     'instagram' => [
-        'access_token' => env('INSTAGRAM_ACCESS_TOKEN'),
-        'account_id'   => env('INSTAGRAM_ACCOUNT_ID'),
-        'app_id'       => env('INSTAGRAM_APP_ID'),
-        'app_secret'   => env('INSTAGRAM_APP_SECRET'),
+        'access_token' => env('INSTAGRAM_ACCESS_TOKEN', ''),
+        'account_id'   => env('INSTAGRAM_ACCOUNT_ID', ''),
+        'app_id'       => env('INSTAGRAM_APP_ID', ''),
+        'app_secret'   => env('INSTAGRAM_APP_SECRET', ''),
         'graph_version'=> env('INSTAGRAM_GRAPH_VERSION', 'v21.0'),
     ],
 

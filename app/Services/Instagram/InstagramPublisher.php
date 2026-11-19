@@ -26,9 +26,9 @@ class InstagramPublisher
 
     public function __construct()
     {
-        $this->accessToken = config('services.instagram.access_token', '');
-        $this->accountId   = config('services.instagram.account_id', '');
-        $version           = config('services.instagram.graph_version', 'v21.0');
+        $this->accessToken = (string) (config('services.instagram.access_token') ?? '');
+        $this->accountId   = (string) (config('services.instagram.account_id') ?? '');
+        $version           = (string) (config('services.instagram.graph_version') ?? 'v21.0');
         $this->baseUrl     = "https://graph.facebook.com/{$version}";
     }
 
