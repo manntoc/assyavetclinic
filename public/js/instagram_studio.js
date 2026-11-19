@@ -423,83 +423,156 @@ async function doPublish() {
 async function inlineAllImages(container) {
     const images = Array.from(container.querySelectorAll('img'));
     for (const img of images) {
-        if (!img.src || img.src.startsWith('data:')) continue;
+        if (!img.src) continue;
         try {
-            const res = await fetch(img.src, { mode: 'cors' });
-            if (!res.ok) continue;
-            const blob = await res.blob();
-            await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    img.src = reader.result;
-                    resolve();
-                };
-                reader.readAsDataURL(blob);
-            });
+            let dataUrl = img.src;
+            // Fetch as data URL if not already data URL
+            if (!img.src.startsWith('data:')) {
+                const res = await fetch(img.src, { mode: 'cors' });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    dataUrl = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                }
+            }
+
+            // Pre-crop images that have object-fit: cover so html2canvas doesn't squash or stretch them (gepeng)
+            const isCover = img.classList.contains('ig-photo-fill') || window.getComputedStyle(img).objectFit === 'cover';
+            const rect = img.getBoundingClientRect();
+            if (isCover && rect.width > 10 && rect.height > 10) {
+                dataUrl = await cropImageToCover(dataUrl, rect.width, rect.height);
+            }
+
+            img.src = dataUrl;
         } catch (e) {
-            console.warn('Could not inline image:', img.src, e);
+            console.warn('Could not inline or crop image:', img.src, e);
         }
     }
 }
 
-async function renderAllSlidesCanvas(throwOnError = false) {
-    const slidePreviews = Array.from(document.querySelectorAll('.ig-slide-preview'));
-    if (!slidePreviews.length) return;
+function cropImageToCover(src, targetWidth, targetHeight) {
+    return new Promise(resolve => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = () => {
+            const canvas = document.createElement('canvas');
+            const cropScale = Math.max(2, 1080 / targetWidth);
+            canvas.width = Math.round(targetWidth * cropScale);
+            canvas.height = Math.round(targetHeight * cropScale);
+            const ctx = canvas.getContext('2d');
 
-    for (let i = 0; i < slidePreviews.length; i++) {
-        const wrap = slidePreviews[i];
-        const slideId = wrap.dataset.slideId;
-        const canvasEl = wrap.querySelector('.ig-canvas') || wrap.firstElementChild;
-        if (!canvasEl || !slideId) continue;
+            const nw = image.naturalWidth || image.width;
+            const nh = image.naturalHeight || image.height;
+            if (!nw || !nh) {
+                resolve(src);
+                return;
+            }
 
-        showToast(`Merender slide ${i + 1}/${slidePreviews.length}...`, 'info');
+            // Calculate center crop covering container (CSS object-fit: cover)
+            const sRatio = nw / nh;
+            const tRatio = canvas.width / canvas.height;
+            let sx, sy, sw, sh;
 
-        const origDisplay  = wrap.style.display;
-        const origPosition = wrap.style.position;
-        const origLeft     = wrap.style.left;
-        const origTop      = wrap.style.top;
-        const origWidth    = wrap.style.width;
-        const origZIndex   = wrap.style.zIndex;
+            if (sRatio > tRatio) {
+                sh = nh;
+                sw = nh * tRatio;
+                sx = (nw - sw) / 2;
+                sy = 0;
+            } else {
+                sw = nw;
+                sh = nw / tRatio;
+                sx = 0;
+                sy = (nh - sh) / 2;
+            }
 
-        wrap.style.display  = 'block';
-        wrap.style.position = 'fixed';
-        wrap.style.left     = '-9999px';
-        wrap.style.top      = '0';
-        wrap.style.width    = '540px';
-        wrap.style.zIndex   = '-9999';
+            ctx.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.95));
+        };
+        image.onerror = () => resolve(src);
+        image.src = src;
+    });
+}
 
-        await new Promise(r => setTimeout(r, 60));
+async function captureSlideCanvas(wrap) {
+    const canvasEl = wrap.querySelector('.ig-canvas') || wrap.firstElementChild;
+    if (!canvasEl) throw new Error('Elemen canvas tidak ditemukan.');
+
+    // 1. Dapatkan dimensi aktual elemen di layar preview
+    const rect = canvasEl.getBoundingClientRect();
+    const curWidth = rect.width || canvasEl.offsetWidth || 340;
+    // Kunci rasio tepat 4:5 portrait (1350 / 1080 = 1.25)
+    const targetHeight = Math.round(curWidth * 1.25);
+
+    const origHeight    = canvasEl.style.height;
+    const origMinHeight = canvasEl.style.minHeight;
+    const origMaxHeight = canvasEl.style.maxHeight;
+
+    // Kunci ukuran tepat pada rasio 4:5 sebelum di-snapshot
+    canvasEl.style.height    = targetHeight + 'px';
+    canvasEl.style.minHeight = targetHeight + 'px';
+    canvasEl.style.maxHeight = targetHeight + 'px';
+
+    try {
+        // 2. Pre-inline gambar dan crop sesuai object-fit: cover agar tidak gepeng
         await inlineAllImages(canvasEl);
 
-        try {
-            // Render exact 1080x1350 px (Instagram Portrait standard 4:5 ratio)
-            const canvas = await html2canvas(canvasEl, {
-                scale: 2,
-                width: 540,
-                height: 675,
-                useCORS: true,
-                allowTaint: false,
-                backgroundColor: '#ffffff',
-                logging: false,
-            });
+        // 3. Render dengan html2canvas menggunakan scaling ke 1080px
+        const scale = 1080 / curWidth;
+        const capturedCanvas = await html2canvas(canvasEl, {
+            scale: scale,
+            useCORS: true,
+            allowTaint: false,
+            backgroundColor: '#ffffff',
+            logging: false,
+        });
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        // 4. Pastikan kanvas output persis berukuran 1080 x 1350 px (Instagram Portrait)
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = 1080;
+        finalCanvas.height = 1350;
+        const ctx = finalCanvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 1080, 1350);
+        ctx.drawImage(capturedCanvas, 0, 0, 1080, 1350);
+
+        return finalCanvas.toDataURL('image/jpeg', 0.95);
+    } finally {
+        canvasEl.style.height    = origHeight;
+        canvasEl.style.minHeight = origMinHeight;
+        canvasEl.style.maxHeight = origMaxHeight;
+    }
+}
+
+async function renderAllSlidesCanvas(throwOnError = false) {
+    if (!slides.length) return;
+    const initialSlideIdx = currentSlide;
+
+    try {
+        for (let i = 0; i < slides.length; i++) {
+            // Tampilkan slide di carousel secara bergantian
+            goToSlide(i);
+            showToast(`Merender slide ${i + 1}/${slides.length} ke 1080x1350...`, 'info');
+
+            // Tunggu sebentar agar slide tampil sempurna di layar
+            await new Promise(r => setTimeout(r, 200));
+
+            const wrap = slides[i];
+            const slideId = wrap.dataset.slideId;
+            if (!slideId) continue;
+
+            const dataUrl = await captureSlideCanvas(wrap);
             const saveUrl = route('saveRendered', { slideId: slideId });
             const res = await apiFetch(saveUrl, 'POST', { image: dataUrl });
+
             if (!res.success && throwOnError) {
-                throw new Error(res.error || 'Server gagal menyimpan hasil render slide ' + (i + 1));
+                throw new Error(res.error || `Server gagal menyimpan hasil render slide ${i + 1}`);
             }
-        } catch (e) {
-            console.error('Error rendering slide #' + slideId, e);
-            if (throwOnError) throw e;
-        } finally {
-            wrap.style.display  = origDisplay;
-            wrap.style.position = origPosition;
-            wrap.style.left     = origLeft;
-            wrap.style.top      = origTop;
-            wrap.style.width    = origWidth;
-            wrap.style.zIndex   = origZIndex;
         }
+    } finally {
+        goToSlide(initialSlideIdx);
     }
 }
 
@@ -515,7 +588,7 @@ document.getElementById('btn-render-all-slides')?.addEventListener('click', asyn
         showToast('Semua slide berhasil dirender ke gambar 1080x1350!', 'success');
         const statusText = document.getElementById('render-status-text');
         if (statusText) {
-            statusText.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i><strong>Semua slide sudah siap dipublish!</strong> (1080x1350)';
+            statusText.innerHTML = '<div class="text-success"><i class="bi bi-check-circle-fill me-1"></i><strong>Semua slide sudah siap dipublish!</strong> (1080x1350)</div>';
         }
     } catch (err) {
         console.error(err);
@@ -528,60 +601,26 @@ document.getElementById('btn-render-all-slides')?.addEventListener('click', asyn
 // ─── Download Active Slide as 1080x1350 Image ────────────────────────────────
 document.getElementById('btn-download-slide')?.addEventListener('click', async function() {
     const btn = this;
-    const allPreviews = Array.from(document.querySelectorAll('.ig-slide-preview'));
-    const activeSlide = allPreviews.find(el => el.style.display !== 'none') || allPreviews[0];
+    const activeSlide = slides[currentSlide] || slides[0];
     if (!activeSlide) return;
-
-    const canvasEl = activeSlide.querySelector('.ig-canvas') || activeSlide.firstElementChild;
-    if (!canvasEl) return;
 
     setLoading(btn, true);
     showToast('Sedang menyiapkan gambar slide 1080x1350 px...', 'info');
 
-    // Remember styles
-    const origWidth = activeSlide.style.width;
-    const origPosition = activeSlide.style.position;
-    const origLeft = activeSlide.style.left;
-    const origTop = activeSlide.style.top;
-    const origZIndex = activeSlide.style.zIndex;
-
-    activeSlide.style.position = 'fixed';
-    activeSlide.style.left = '-9999px';
-    activeSlide.style.top = '0';
-    activeSlide.style.width = '540px';
-    activeSlide.style.zIndex = '-9999';
-    activeSlide.style.display = 'block';
-
-    await new Promise(r => setTimeout(r, 60));
-    await inlineAllImages(canvasEl);
-
     try {
-        const canvas = await html2canvas(canvasEl, {
-            scale: 2,
-            width: 540,
-            height: 675,
-            useCORS: true,
-            allowTaint: false,
-            backgroundColor: '#ffffff',
-            logging: false,
-        });
+        const dataUrl = await captureSlideCanvas(activeSlide);
+        const slideId = activeSlide.dataset.slideId || (currentSlide + 1);
 
         const link = document.createElement('a');
-        const slideId = activeSlide.dataset.slideId || 'slide';
         link.download = `instagram_${CONTENT_ID}_slide_${slideId}_1080x1350.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.href = dataUrl;
         link.click();
+
         showToast('Gambar slide 1080x1350 berhasil didownload!', 'success');
     } catch (err) {
         console.error(err);
         showToast('Gagal mendownload gambar slide: ' + (err.message || err), 'error');
     } finally {
-        activeSlide.style.width = origWidth;
-        activeSlide.style.position = origPosition;
-        activeSlide.style.left = origLeft;
-        activeSlide.style.top = origTop;
-        activeSlide.style.zIndex = origZIndex;
-        activeSlide.style.display = 'block';
         setLoading(btn, false);
     }
 });

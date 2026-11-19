@@ -42,7 +42,7 @@
 
 /* ── Brand Component: Logo (NEVER stretch, NEVER squash) ────────────────────── */
 .ig-brand-logo {
-    height:clamp(22px,7cqw,38px);
+    height:28px;
     width:auto;
     object-fit:contain;
     display:block;
@@ -318,70 +318,107 @@
                     </div>
                 </div>
 
-                {{-- Actions --}}
-                <div class="kreloses-card p-3">
-                    <div class="d-grid gap-2">
-                        @if(in_array($content->status, ['draft', 'generated']))
-                            <button class="btn btn-outline-primary" id="btn-submit-review"
-                                    style="border-color:#2d8aba;color:#2d8aba;border-radius:8px;">
-                                <i class="bi bi-send-check me-1"></i>Kirim untuk Review
+                {{-- Actions Card: Stage by Stage --}}
+                <div class="kreloses-card p-3 mb-3">
+                    {{-- Stage 1: Edit & Media --}}
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-uppercase fw-bold text-muted" style="font-size:0.7rem;letter-spacing:0.5px;">
+                                <span class="badge bg-secondary me-1" style="font-size:0.65rem;">1</span> Persiapan Konten & Visual
+                            </span>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-sm btn-outline-primary" id="btn-generate-images" style="border-radius:8px;border-color:#2d8aba;color:#2d8aba;"
+                                    title="Generate gambar AI untuk semua slide yang belum ada foto">
+                                <i class="bi bi-stars me-1"></i>Generate Gambar AI
                             </button>
-                        @endif
-
-                        @if($content->status === 'review')
-                            <button class="btn btn-success" id="btn-approve" style="border-radius:8px;">
-                                <i class="bi bi-check-circle me-1"></i>Setujui Konten
+                            <button class="btn btn-sm btn-outline-secondary" id="btn-save-draft" style="border-radius:8px;"
+                                    title="Simpan teks dan perubahan konten saat ini">
+                                <i class="bi bi-floppy2 me-1"></i>Simpan Perubahan Draft
                             </button>
-                        @endif
+                        </div>
+                    </div>
 
-                        @if($content->status === 'approved')
-                            <button class="btn btn-dark" id="btn-publish" style="border-radius:8px;">
-                                <i class="bi bi-instagram me-1"></i>Publish ke Instagram
-                            </button>
-                        @endif
+                    <div style="border-top:1px dashed #e2e8f0;margin:12px 0;"></div>
 
-                        <button class="btn btn-outline-secondary" id="btn-save-draft" style="border-radius:8px;">
-                            <i class="bi bi-floppy2 me-1"></i>Simpan sebagai Draft
-                        </button>
+                    {{-- Stage 2: Render Canvas 1080x1350 --}}
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-uppercase fw-bold text-muted" style="font-size:0.7rem;letter-spacing:0.5px;">
+                                <span class="badge bg-primary me-1" style="font-size:0.65rem;">2</span> Render Canvas (1080x1350)
+                            </span>
+                        </div>
 
-                        {{-- Render All Slides Button --}}
-                        <button class="btn btn-primary" id="btn-render-all-slides" style="background:#2d8aba;border-color:#2d8aba;border-radius:8px;"
-                                title="Render semua slide menjadi gambar 1080x1350 utuh">
-                            <i class="bi bi-magic me-1"></i>Render Semua Slide (1080x1350)
-                        </button>
-
-                        <div id="render-status-badge" class="text-center p-2 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:0.75rem;">
+                        <div id="render-status-badge" class="p-2 mb-2 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:0.75rem;">
                             @php
                                 $renderedCount = $content->slides->whereNotNull('rendered_path')->count();
                                 $totalSlideCount = $content->slides->count();
                             @endphp
-                            <span id="render-status-text" class="text-muted">
+                            <div id="render-status-text">
                                 @if($renderedCount === $totalSlideCount && $totalSlideCount > 0)
-                                    <i class="bi bi-check-circle-fill text-success me-1"></i><strong>Semua {{ $totalSlideCount }} slide sudah siap</strong> (1080x1350)
+                                    <div class="text-success"><i class="bi bi-check-circle-fill me-1"></i><strong>Semua {{ $totalSlideCount }} slide sudah siap</strong> (1080x1350)</div>
                                 @elseif($renderedCount > 0)
-                                    <i class="bi bi-clock-history text-warning me-1"></i>{{ $renderedCount }} dari {{ $totalSlideCount }} slide sudah dirender
+                                    <div class="text-warning"><i class="bi bi-clock-history me-1"></i>{{ $renderedCount }} dari {{ $totalSlideCount }} slide sudah dirender</div>
                                 @else
-                                    <i class="bi bi-info-circle text-info me-1"></i>Belum dirender ke gambar canvas
+                                    <div class="text-muted"><i class="bi bi-info-circle me-1"></i>Slide belum dirender ke gambar canvas</div>
                                 @endif
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" id="btn-render-all-slides" style="background:#2d8aba;border-color:#2d8aba;border-radius:8px;"
+                                    title="Render semua slide menjadi gambar portrait 1080x1350 utuh sesuai preview">
+                                <i class="bi bi-magic me-1"></i>Render Semua Slide (1080x1350)
+                            </button>
+                            <button class="btn btn-sm btn-outline-info" id="btn-download-slide" style="border-radius:8px;"
+                                    title="Download slide yang sedang aktif sebagai file gambar JPG 1080x1350">
+                                <i class="bi bi-download me-1"></i>Download Slide Aktif (1080x1350)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="border-top:1px dashed #e2e8f0;margin:12px 0;"></div>
+
+                    {{-- Stage 3: Approval & Publikasi --}}
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-uppercase fw-bold text-muted" style="font-size:0.7rem;letter-spacing:0.5px;">
+                                <span class="badge bg-success me-1" style="font-size:0.65rem;">3</span> Alur Publikasi Instagram
                             </span>
                         </div>
 
-                        {{-- Download Active Slide Image --}}
-                        <button class="btn btn-outline-info" id="btn-download-slide" style="border-radius:8px;"
-                                title="Download slide aktif sebagai gambar 1080x1350 (4:5)">
-                            <i class="bi bi-download me-1"></i>Download Slide (1080x1350)
-                        </button>
+                        <div class="d-grid gap-2">
+                            @if(in_array($content->status, ['draft', 'generated']))
+                                <button class="btn btn-outline-warning text-dark fw-medium" id="btn-submit-review"
+                                        style="border-color:#f59e0b;background:#fffbeb;border-radius:8px;">
+                                    <i class="bi bi-send-check me-1"></i>Kirim untuk Review
+                                </button>
+                            @endif
 
-                        {{-- Generate Images --}}
-                        <button class="btn btn-outline-primary" id="btn-generate-images" style="border-radius:8px;"
-                                title="Generate gambar AI untuk semua slide">
-                            <i class="bi bi-stars me-1"></i>Generate Gambar AI
-                        </button>
+                            @if($content->status === 'review')
+                                <button class="btn btn-success fw-medium" id="btn-approve" style="border-radius:8px;">
+                                    <i class="bi bi-check2-circle me-1"></i>Setujui Konten (Approve)
+                                </button>
+                            @endif
+
+                            @if($content->status === 'approved')
+                                <button class="btn text-white fw-bold shadow-sm" id="btn-publish"
+                                        style="background:linear-gradient(45deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);border:none;border-radius:8px;padding:10px 16px;">
+                                    <i class="bi bi-instagram me-1"></i>Publish ke Instagram Sekarang
+                                </button>
+                            @endif
+
+                            @if($content->status === 'published')
+                                <div class="text-center p-2 rounded" style="background:#ecfdf5;border:1px solid #a7f3d0;font-size:0.8rem;color:#065f46;">
+                                    <i class="bi bi-patch-check-fill me-1"></i>Konten sudah dipublikasikan ke Instagram
+                                </div>
+                            @endif
+                        </div>
                     </div>
 
                     {{-- Privacy reminder --}}
                     @if($content->source_type === 'kasus_klinik')
-                        <div class="mt-2 p-2 rounded" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                        <div class="mt-3 p-2 rounded" style="background:#f0fdf4;border:1px solid #bbf7d0;">
                             <small style="font-size:0.72rem;color:#166534;">
                                 <i class="bi bi-shield-check me-1"></i>
                                 Data pasien telah dianonimkan. Review konten sebelum mempublikasikan.
