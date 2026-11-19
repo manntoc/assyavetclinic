@@ -13,13 +13,18 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- Favicon -->
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="48x48" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('logo-web.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-web.png') }}">
+    @if(isset($general_site_image))
 
-    @if(isset($general_site_image) && !empty($general_site_image->favicon_image) && file_exists(public_path('uploads/img/general/'.$general_site_image->favicon_image)))
-        <link href="{{ asset('uploads/img/general/'.$general_site_image->favicon_image) }}" sizes="128x128" rel="shortcut icon" />
+        @if (!empty($general_site_image->favicon_image))
+            <link href="{{ asset('uploads/img/general/'.$general_site_image->favicon_image) }}" sizes="128x128" rel="shortcut icon" type="image/x-icon" />
+            <link href="{{ asset('uploads/img/general/'.$general_site_image->favicon_image) }}" sizes="128x128" rel="shortcut icon" />
+        @endif
+
+    @else
+
+        <link href="{{ asset('uploads/img/dummy/favicon.png') }}" sizes="128x128" rel="shortcut icon" type="image/x-icon" />
+        <link href="{{ asset('uploads/img/dummy/favicon.png') }}" sizes="128x128" rel="shortcut icon" />
+
     @endif
 
 <!-- Fonts -->

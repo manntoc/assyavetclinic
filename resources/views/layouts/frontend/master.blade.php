@@ -28,19 +28,18 @@
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta property="og:site_name" content="assyavetclinic.com">
 
     <!-- Title -->
-    <title>@if (isset($blog)) {{ $blog->title }} - @elseif (isset($service)) {{ $service->title }} - @elseif (isset($portfolio->title)) {{ $portfolio->title }} - @endif{{ !empty($general_seo->site_name) ? strtolower($general_seo->site_name) : 'assyavetclinic.com' }}</title>
+    <title>@if (isset($general_seo)){{ $general_seo->site_name }} @endif @if (isset($blog)) {{ $blog->title }} @elseif (isset($service)) {{ $service->title }} @elseif (isset($portfolio->title)) {{ $portfolio->title }} @elseif (isset($general_seo)){{ $general_seo->site_name }} @endif</title>
 
-    <!-- Favicon (Google Search & Multi-device compliant) -->
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="48x48" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('logo-web.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-web.png') }}">
-
-@if (!empty($general_site_image->favicon_image) && file_exists(public_path('uploads/img/general/'.$general_site_image->favicon_image)))
-    <link href="{{ asset('uploads/img/general/'.$general_site_image->favicon_image) }}" sizes="128x128" rel="shortcut icon" />
+@if (!empty($general_site_image->favicon_image))
+    <!-- Favicon -->
+        <link href="{{ asset('uploads/img/general/'.$general_site_image->favicon_image) }}" sizes="128x128" rel="shortcut icon" type="image/x-icon" />
+        <link href="{{ asset('uploads/img/general/'.$general_site_image->favicon_image) }}" sizes="128x128" rel="shortcut icon" />
+@else
+    <!-- Favicon -->
+        <link href="{{ asset('uploads/img/dummy/favicon.png') }}" sizes="128x128" rel="shortcut icon" type="image/x-icon" />
+        <link href="{{ asset('uploads/img/dummy/favicon.png') }}" sizes="128x128" rel="shortcut icon" />
 @endif
 
 

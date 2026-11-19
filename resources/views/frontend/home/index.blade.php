@@ -14,49 +14,37 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <meta name="title" content="assyavetclinic.com">
+    <meta name="title" content="@if (isset($general_seo)){{ $general_seo->site_name }} @endif">
     <meta name="description" content="@if (isset($general_seo)){{ $general_seo->site_desc }} @endif">
     <meta name="keywords" content="@if (isset($general_seo)){{ $general_seo->site_keywords }} @endif">
     <meta name="author" content="superadmin">
     <meta property="fb:app_id" content="@if (isset($general_seo)){{ $general_seo->fb_app_id }} @endif">
-    <meta property="og:site_name" content="assyavetclinic.com">
-    <meta property="og:title" content="assyavetclinic.com">
+    <meta property="og:title" content="@if (isset($general_seo)){{ $general_seo->site_name }} @endif">
     <meta property="og:url" content="@if (isset($general_seo)){{ url()->current() }} @endif">
     <meta property="og:description" content="@if (isset($general_seo)){{ $general_seo->site_desc }} @endif">
-    <meta property="og:image" content="{{ asset('logo-web.png') }}">
-    <meta itemprop="image" content="{{ asset('logo-web.png') }}">
+    <meta property="og:image" content="@if (!empty($general_site_image->favicon_image)){{ asset('uploads/img/general/'.$general_site_image->favicon_image) }} @endif">
+    <meta itemprop="image" content="@if (!empty($general_site_image->favicon_image)){{ asset('uploads/img/general/'.$general_site_image->favicon_image) }} @endif">
     <meta property="og:type" content="website">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="{{ asset('logo-web.png') }}">
-    <meta property="twitter:title" content="assyavetclinic.com">
+    <meta name="twitter:image" content="@if (!empty($general_site_image->favicon_image)){{ asset('uploads/img/general/'.$general_site_image->favicon_image) }} @endif">
+    <meta property="twitter:title" content="@if (isset($general_seo)){{ $general_seo->site_name }} @endif">
     <meta property="twitter:description" content="@if (isset($general_seo)){{ $general_seo->site_desc }} @endif">
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Title -->
-    <title>assyavetclinic.com</title>
+    <title>{{ __('frontend.home') }} @if (isset($general_seo)) - {{ $general_seo->site_name }} @endif</title>
 
-    <!-- Schema.org WebSite structured data for Google Search Site Name -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "assyavetclinic.com",
-      "alternateName": ["assyavetclinic", "Assya Vet Clinic"],
-      "url": "https://assyavetclinic.com/"
-    }
-    </script>
-
-    <!-- Favicon (Google Search & Multi-device compliant) -->
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="48x48" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('logo-web.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-web.png') }}">
-
-@if (!empty($general_site_image->favicon_image) && file_exists(public_path('uploads/img/general/'.$general_site_image->favicon_image)))
-    <link href="{{ asset('uploads/img/general/'.$general_site_image->favicon_image) }}" sizes="128x128" rel="shortcut icon" />
+@if (!empty($general_site_image->favicon_image))
+    <!-- Favicon -->
+        <link href="{{ asset('uploads/img/general/'.$general_site_image->favicon_image) }}" sizes="128x128" rel="shortcut icon" type="image/x-icon" />
+        <link href="{{ asset('uploads/img/general/'.$general_site_image->favicon_image) }}" sizes="128x128" rel="shortcut icon" />
+@else
+    <!-- Favicon -->
+        <link href="{{ asset('uploads/img/dummy/favicon.png') }}" sizes="128x128" rel="shortcut icon" type="image/x-icon" />
+        <link href="{{ asset('uploads/img/dummy/favicon.png') }}" sizes="128x128" rel="shortcut icon" />
 @endif
 
     <!--// Boostrap  //-->
