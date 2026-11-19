@@ -619,6 +619,7 @@ Route::middleware(['auth', 'akses:admin|superadmin'])->prefix('instagram-studio'
     Route::post('/{contentId}/slides/{slideId}/regenerate', [InstagramContentController::class, 'regenerateSlide'])->name('regenerate-slide');
     Route::get('/{contentId}/slides/{slideId}/canvas',    [InstagramContentController::class, 'renderSlideCanvas'])->name('slide-canvas');
     Route::post('/{contentId}/slides/{slideId}/image', [InstagramContentController::class, 'uploadImage'])  ->name('upload-image');
+    Route::post('/{contentId}/slides/{slideId}/save-rendered', [InstagramContentController::class, 'saveRenderedSlide'])->name('save-rendered-slide');
     Route::post('/{id}/slides/add',                  [InstagramContentController::class, 'addSlide'])       ->name('add-slide');
     Route::delete('/{contentId}/slides/{slideId}',   [InstagramContentController::class, 'removeSlide'])    ->name('remove-slide');
     Route::post('/{id}/slides/reorder',              [InstagramContentController::class, 'reorderSlides'])  ->name('reorder-slides');
@@ -640,6 +641,7 @@ Route::get('/storage/instagram/{path}', function ($path) {
         return response()->file($filePath, [
             'Content-Type' => $mimeType,
             'Cache-Control' => 'public, max-age=86400',
+            'Access-Control-Allow-Origin' => '*',
         ]);
     }
     abort(404);

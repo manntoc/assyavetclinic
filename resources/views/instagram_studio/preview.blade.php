@@ -344,6 +344,12 @@
                             <i class="bi bi-floppy2 me-1"></i>Simpan sebagai Draft
                         </button>
 
+                        {{-- Download Active Slide Image --}}
+                        <button class="btn btn-outline-info" id="btn-download-slide" style="border-radius:8px;"
+                                title="Download slide aktif sebagai gambar 1080x1350 (4:5)">
+                            <i class="bi bi-download me-1"></i>Download Slide (1080x1350)
+                        </button>
+
                         {{-- Generate Images --}}
                         <button class="btn btn-outline-primary" id="btn-generate-images" style="border-radius:8px;"
                                 title="Generate gambar AI untuk semua slide">
@@ -444,10 +450,12 @@ const ROUTES = {
     approve:          '/instagram-studio/' + CONTENT_ID + '/approve',
     publish:          '/instagram-studio/' + CONTENT_ID + '/publish',
     generateImages:   '/instagram-studio/' + CONTENT_ID + '/generate-images',
+    saveRendered:     '/instagram-studio/' + CONTENT_ID + '/slides/{slideId}/save-rendered',
 };
 const BRAND = @json($brand);
 const CONTENT_STATUS = '{{ $content->status }}';
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="{{ asset('js/instagram_studio.js') }}"></script>
 
 @endsection

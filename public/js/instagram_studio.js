@@ -392,21 +392,145 @@ document.getElementById('btn-publish')?.addEventListener('click', function() {
     }).then(result => { if (result.isConfirmed) doPublish(); });
 });
 
-function doPublish() {
+async function doPublish() {
     const btn = document.getElementById('btn-publish');
     setLoading(btn, true);
-    apiFetch(route('publish'), 'POST')
-        .then(res => {
-            setLoading(btn, false);
-            if (res.success) {
-                showToast('Berhasil dipublikasikan ke Instagram!');
-                setTimeout(() => location.reload(), 1200);
-            } else {
-                showToast(res.message || 'Gagal publish.', 'error');
-            }
-        })
-        .catch(() => { setLoading(btn, false); showToast('Gagal publish.', 'error'); });
+
+    try {
+        if (typeof html2canvas !== 'undefined') {
+            showToast('Sedang merender seluruh canvas slide...', 'info');
+            await renderAllSlidesCanvas();
+        }
+
+        showToast('Sedang mengirim ke Instagram...', 'info');
+        const res = await apiFetch(route('publish'), 'POST');
+        setLoading(btn, false);
+        if (res.success) {
+            showToast('Berhasil dipublikasikan ke Instagram!');
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            showToast(res.message || res.error || 'Gagal publish.', 'error');
+        }
+    } catch (err) {
+        setLoading(btn, false);
+        console.error('Publish error:', err);
+        showToast('Gagal memproses gambar: ' + (err.message || err), 'error');
+    }
 }
+
+async function renderAllSlidesCanvas() {
+    const slidePreviews = Array.from(document.querySelectorAll('.ig-slide-preview'));
+    if (!slidePreviews.length) return;
+
+    for (let i = 0; i < slidePreviews.length; i++) {
+        const wrap = slidePreviews[i];
+        const slideId = wrap.dataset.slideId;
+        const canvasEl = wrap.querySelector('.ig-canvas') || wrap.firstElementChild;
+        if (!canvasEl || !slideId) continue;
+
+        const origDisplay  = wrap.style.display;
+        const origPosition = wrap.style.position;
+        const origLeft     = wrap.style.left;
+        const origTop      = wrap.style.top;
+        const origWidth    = wrap.style.width;
+        const origZIndex   = wrap.style.zIndex;
+
+        wrap.style.display  = 'block';
+        wrap.style.position = 'fixed';
+        wrap.style.left     = '-9999px';
+        wrap.style.top      = '0';
+        wrap.style.width    = '540px';
+        wrap.style.zIndex   = '-9999';
+
+        await new Promise(r => setTimeout(r, 80));
+
+        try {
+            // Render exact 1080x1350 px (Instagram Portrait standard 4:5 ratio)
+            const canvas = await html2canvas(canvasEl, {
+                scale: 2,
+                width: 540,
+                height: 675,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                logging: false,
+            });
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            const saveUrl = route('saveRendered', { slideId: slideId });
+            await apiFetch(saveUrl, 'POST', { image: dataUrl });
+        } catch (e) {
+            console.error('Error rendering slide #' + slideId, e);
+        } finally {
+            wrap.style.display  = origDisplay;
+            wrap.style.position = origPosition;
+            wrap.style.left     = origLeft;
+            wrap.style.top      = origTop;
+            wrap.style.width    = origWidth;
+            wrap.style.zIndex   = origZIndex;
+        }
+    }
+}
+
+// ─── Download Active Slide as 1080x1350 Image ────────────────────────────────
+document.getElementById('btn-download-slide')?.addEventListener('click', async function() {
+    const btn = this;
+    const allPreviews = Array.from(document.querySelectorAll('.ig-slide-preview'));
+    const activeSlide = allPreviews.find(el => el.style.display !== 'none') || allPreviews[0];
+    if (!activeSlide) return;
+
+    const canvasEl = activeSlide.querySelector('.ig-canvas') || activeSlide.firstElementChild;
+    if (!canvasEl) return;
+
+    setLoading(btn, true);
+    showToast('Sedang menyiapkan gambar slide 1080x1350 px...', 'info');
+
+    // Remember styles
+    const origWidth = activeSlide.style.width;
+    const origPosition = activeSlide.style.position;
+    const origLeft = activeSlide.style.left;
+    const origTop = activeSlide.style.top;
+    const origZIndex = activeSlide.style.zIndex;
+
+    activeSlide.style.position = 'fixed';
+    activeSlide.style.left = '-9999px';
+    activeSlide.style.top = '0';
+    activeSlide.style.width = '540px';
+    activeSlide.style.zIndex = '-9999';
+    activeSlide.style.display = 'block';
+
+    await new Promise(r => setTimeout(r, 80));
+
+    try {
+        const canvas = await html2canvas(canvasEl, {
+            scale: 2,
+            width: 540,
+            height: 675,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: null,
+            logging: false,
+        });
+
+        const link = document.createElement('a');
+        const slideId = activeSlide.dataset.slideId || 'slide';
+        link.download = `instagram_${CONTENT_ID}_slide_${slideId}_1080x1350.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+        showToast('Gambar slide 1080x1350 berhasil didownload!', 'success');
+    } catch (err) {
+        console.error(err);
+        showToast('Gagal mendownload gambar slide.', 'error');
+    } finally {
+        activeSlide.style.width = origWidth;
+        activeSlide.style.position = origPosition;
+        activeSlide.style.left = origLeft;
+        activeSlide.style.top = origTop;
+        activeSlide.style.zIndex = origZIndex;
+        activeSlide.style.display = 'block';
+        setLoading(btn, false);
+    }
+});
 
 // ─── Generate Images (AI) ─────────────────────────────────────────────────────
 

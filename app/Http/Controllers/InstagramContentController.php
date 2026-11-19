@@ -416,6 +416,51 @@ class InstagramContentController extends Controller
     }
 
     // =========================================================================
+    // Save rendered canvas image (HTML-to-Image client snapshot)
+    // =========================================================================
+
+    public function saveRenderedSlide(Request $request, int $contentId, int $slideId)
+    {
+        $request->validate([
+            'image' => 'required|string',
+        ]);
+
+        $slide = InstagramContentSlide::where('id', $slideId)
+            ->where('instagram_content_id', $contentId)
+            ->firstOrFail();
+
+        $dataUrl = $request->input('image');
+        if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl, $type)) {
+            $dataUrl = substr($dataUrl, strpos($dataUrl, ',') + 1);
+            $type = strtolower($type[1]);
+            $data = base64_decode($dataUrl);
+
+            if ($data === false) {
+                return response()->json(['success' => false, 'error' => 'Base64 decode gagal.'], 422);
+            }
+        } else {
+            return response()->json(['success' => false, 'error' => 'Format gambar tidak valid.'], 422);
+        }
+
+        // Hapus file rendered lama jika ada
+        if ($slide->rendered_path) {
+            Storage::disk('public')->delete($slide->rendered_path);
+        }
+
+        $extension = ($type === 'png') ? 'png' : 'jpg';
+        $filename  = "slide_{$slide->slide_number}_rendered_" . time() . ".{$extension}";
+        $path      = "instagram/rendered/{$contentId}/{$filename}";
+
+        Storage::disk('public')->put($path, $data);
+        $slide->update(['rendered_path' => $path]);
+
+        return response()->json([
+            'success'      => true,
+            'rendered_url' => asset('storage/' . $path),
+        ]);
+    }
+
+    // =========================================================================
     // Save as draft / change status
     // =========================================================================
 
@@ -463,11 +508,11 @@ class InstagramContentController extends Controller
             ], 422);
         }
 
-        // Kumpulkan URL publik gambar tiap slide (harus accessible dari internet)
+        // Kumpulkan URL publik gambar tiap slide (prioritaskan rendered_path canvas utuh)
         $imageUrls = $content->slides
             ->sortBy('slide_number')
-            ->filter(fn($s) => !empty($s->image_path))
-            ->map(fn($s) => $s->image_url)          // accessor: asset('storage/...')
+            ->filter(fn($s) => !empty($s->rendered_path) || !empty($s->image_path))
+            ->map(fn($s) => $s->image_url)          // accessor: rendered_path ?: image_path
             ->filter(fn($u) => !empty($u))
             ->values()
             ->toArray();
