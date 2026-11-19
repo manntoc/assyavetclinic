@@ -23,7 +23,7 @@ return [
         'ninerouter' => [
             'class' => \App\AI\Providers\NineRouterProvider::class,
             'api_key' => env('AI_API_KEY', env('NINEROUTER_API_KEY', '')),
-            'base_url' => env('AI_BASE_URL', env('NINEROUTER_BASE_URL', 'http://localhost:20128/v1')),
+            'base_url' => env('AI_BASE_URL', (env('NINEROUTER_BASE_URL') && !str_contains(env('NINEROUTER_BASE_URL'), 'localhost:20128') ? env('NINEROUTER_BASE_URL') : 'https://ai.geraikita.com/v1')),
         ],
         'openai' => [
             'class' => \App\AI\Providers\OpenAIProvider::class,

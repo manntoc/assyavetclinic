@@ -13,8 +13,12 @@ class NineRouterService
 
     public function __construct()
     {
-        $this->apiKey = config('services.ninerouter.api_key', env('NINEROUTER_API_KEY', ''));
-        $this->baseUrl = rtrim(config('services.ninerouter.base_url', env('NINEROUTER_BASE_URL', 'http://localhost:20128/v1')), '/');
+        $this->apiKey = config('services.ninerouter.api_key') ?: env('AI_API_KEY', env('NINEROUTER_API_KEY', ''));
+        $baseUrl = config('services.ninerouter.base_url') ?: env('AI_BASE_URL', env('NINEROUTER_BASE_URL', 'https://ai.geraikita.com/v1'));
+        if (str_contains($baseUrl, 'localhost:20128')) {
+            $baseUrl = 'https://ai.geraikita.com/v1';
+        }
+        $this->baseUrl = rtrim($baseUrl, '/');
     }
 
     /**
