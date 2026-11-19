@@ -6,12 +6,24 @@
 @php
     $purposeLabels = \App\Models\InstagramContentSlide::$purposeLabels;
     $layouts = [
-        'hero'        => 'A — Hero Image',
-        'text_focus'  => 'B — Text Focus',
-        'split'       => 'C — Split Layout',
-        'case_study'  => 'D — Case Study',
-        'educational' => 'E — Educational',
+        'hero'        => 'A — Hero Image (Cover / Hook Visual)',
+        'text_focus'  => 'B — Text Focus (Edukasi Terstruktur)',
+        'split'       => 'C — Split Layout (Foto & Teks Sejajar)',
+        'case_study'  => 'D — Case Study (Navy Klinis & Poin)',
+        'educational' => 'E — Educational (Grid Tips & Kartu)',
+        'cta'         => 'F — Call to Action (Penutup / Kontak)',
     ];
+
+    // Normalisasi layout saat ini agar dropdown selalu terpilih dengan benar
+    $currentNormalized = match($slide->layout) {
+        'hook_center', 'hero'          => 'hero',
+        'white_top_blue', 'text_focus' => 'text_focus',
+        'split_reverse', 'split'       => 'split',
+        'navy_full', 'case_study'      => 'case_study',
+        'card_grid', 'educational'     => 'educational',
+        'cta_full', 'cta'              => 'cta',
+        default                        => ($slide->purpose === 'cta' ? 'cta' : 'hero'),
+    };
 @endphp
 
 <div class="slide-editor-card" id="editor-slide-{{ $slide->id }}" data-slide-id="{{ $slide->id }}">
@@ -43,17 +55,19 @@
 
     {{-- Layout selector --}}
     <div class="mb-2">
+        <label class="form-label mb-1 text-muted" style="font-size:0.72rem;font-weight:600;">Tata Letak / Template:</label>
         <select class="form-select form-select-sm slide-layout-select"
                 data-slide-id="{{ $slide->id }}"
                 style="font-size:0.78rem;border-radius:6px;">
             @foreach($layouts as $k => $v)
-                <option value="{{ $k }}" {{ $slide->layout === $k ? 'selected' : '' }}>{{ $v }}</option>
+                <option value="{{ $k }}" {{ $currentNormalized === $k ? 'selected' : '' }}>{{ $v }}</option>
             @endforeach
         </select>
     </div>
 
     {{-- Headline --}}
     <div class="mb-2">
+        <label class="form-label mb-1 text-muted" style="font-size:0.72rem;font-weight:600;">Headline:</label>
         <input type="text"
                class="form-control form-control-sm slide-headline-input"
                data-slide-id="{{ $slide->id }}"
@@ -64,6 +78,7 @@
 
     {{-- Body --}}
     <div class="mb-2">
+        <label class="form-label mb-1 text-muted" style="font-size:0.72rem;font-weight:600;">Isi Teks / Poin:</label>
         <textarea class="form-control form-control-sm slide-body-input"
                   data-slide-id="{{ $slide->id }}"
                   placeholder="Isi teks slide..."

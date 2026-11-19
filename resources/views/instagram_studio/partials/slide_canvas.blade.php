@@ -121,6 +121,7 @@
         'magazine'    => 'editorial',
         'scrapbook'   => 'scrapbook',
         'collage'     => 'card_grid',
+        'cta'         => 'cta_full',
     ];
     if (isset($legacyMap[$layout])) $layout = $legacyMap[$layout];
 
@@ -129,18 +130,13 @@
         'split_reverse','blue_gradient','cta_full','editorial',
         'scrapbook','typography_hero',
     ];
-    if (!in_array($layout, $validLayouts)) $layout = 'hook_center';
-
-    // ── Brand layer override rules ───────────────────────────────────────
-    // Force cta_full HANYA dari purpose, bukan dari posisi slide.
-    // Posisi slide terakhir tidak otomatis CTA — user/AI yang menentukan purpose.
-    if ($purpose === 'cta') {
-        $layout = 'cta_full';
+    if (!in_array($layout, $validLayouts)) {
+        $layout = ($purpose === 'cta') ? 'cta_full' : 'hook_center';
     }
 @endphp
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-{{-- LAYOUT 1: hook_center — Cover slide: big headline + centered photo         --}}
+{{-- LAYOUT 1: hook_center — Cover slide: big headline + hero photo              --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @if($layout === 'hook_center')
 <div class="ig-canvas ig-lyt-hook-center">
@@ -153,18 +149,25 @@
 
     {{-- Content Layer --}}
     <div class="ig-hc-body">
-        <div class="ig-hc-badge">{{ $badgeLabel }}</div>
-        <div class="ig-hc-headline">{{ $headline }}</div>
-        <div class="ig-hc-photo-wrap">
+        <div class="ig-hc-header-zone">
+            <div class="ig-hc-badge"><i class="bi bi-sparkles me-1"></i>{{ $badgeLabel }}</div>
+            <h1 class="ig-hc-headline">{{ $headline }}</h1>
+        </div>
+        <div class="ig-hc-photo-card">
             @if($hasImage)
                 <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
             @else
                 @include('instagram_studio.partials.photo_placeholder')
             @endif
+            @if(!empty($body))
+                <div class="ig-hc-photo-caption">
+                    <span>{{ Str::limit($body, 110) }}</span>
+                </div>
+            @endif
         </div>
-        @if(!empty($body))
-            <div class="ig-hc-subtext">{{ Str::limit($body, 90) }}</div>
-        @endif
+        <div class="ig-hc-footer-hint">
+            <span class="ig-hc-swipe-pill">Geser untuk info lengkap <i class="bi bi-arrow-right ms-1"></i></span>
+        </div>
     </div>
 
     {{-- Brand Layer: Bottom --}}
@@ -172,7 +175,7 @@
 </div>
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-{{-- LAYOUT 2: navy_full — Navy full-bleed, white text, numbered list           --}}
+{{-- LAYOUT 2: navy_full — Navy full-bleed, white text, clinical card points     --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @elseif($layout === 'navy_full')
 <div class="ig-canvas ig-lyt-navy-full">
@@ -185,32 +188,35 @@
 
     {{-- Content Layer --}}
     <div class="ig-nf-body">
-        <div class="ig-nf-tag">
-            {{ $purpose === 'problem' ? '⚠ Gejala & Penyebab' : ($purpose === 'tips' ? '✓ Tips Sehat' : 'ℹ Info Penting') }}
+        <div class="ig-nf-header">
+            <div class="ig-nf-tag">
+                <i class="bi bi-shield-check me-1"></i>{{ $purpose === 'problem' ? 'Gejala & Penyebab' : ($purpose === 'tips' ? 'Tips Kesehatan' : 'Info Medis') }}
+            </div>
+            <h2 class="ig-nf-headline">{{ $headline }}</h2>
         </div>
-        <div class="ig-nf-headline">{{ $headline }}</div>
 
         @if($hasImage)
-            <div class="ig-nf-photo-strip">
+            <div class="ig-nf-photo-card">
                 <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
             </div>
         @endif
 
         <div class="ig-nf-points">
-            @foreach(array_slice($points, 0, 4) as $i => $pt)
+            @foreach(array_slice($points, 0, 3) as $i => $pt)
                 @php
                     $parts = explode(':', $pt, 2);
                     $hasKey = count($parts) === 2 && strlen($parts[0]) <= 35;
                 @endphp
-                <div class="ig-nf-point">
-                    <span class="ig-nf-num">{{ $i + 1 }}</span>
-                    <span class="ig-nf-pt-text">
+                <div class="ig-nf-card">
+                    <div class="ig-nf-badge">{{ $i + 1 }}</div>
+                    <div class="ig-nf-card-content">
                         @if($hasKey)
-                            <strong style="color:#ffffff;">{{ trim($parts[0]) }}:</strong> {{ trim($parts[1]) }}
+                            <strong class="ig-nf-key">{{ trim($parts[0]) }}:</strong>
+                            <span class="ig-nf-val">{{ trim($parts[1]) }}</span>
                         @else
-                            {{ $pt }}
+                            <span class="ig-nf-val">{{ $pt }}</span>
                         @endif
-                    </span>
+                    </div>
                 </div>
             @endforeach
         </div>
@@ -221,45 +227,50 @@
 </div>
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-{{-- LAYOUT 3: white_top_blue — Top white (headline+photo), blue panel below    --}}
+{{-- LAYOUT 3: white_top_blue — Top white hero, structured blue cards            --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @elseif($layout === 'white_top_blue')
 <div class="ig-canvas ig-lyt-white-top-blue">
     {{-- Brand Layer: Top --}}
     @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
 
-    {{-- Content Layer: Top zone --}}
-    <div class="ig-wtb-top">
-        <div class="ig-wtb-headline">{{ $headline }}</div>
-        @if($hasImage)
-            <div class="ig-wtb-photo">
-                <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
+    {{-- Content Layer --}}
+    <div class="ig-wtb-body">
+        <div class="ig-wtb-hero">
+            <div class="ig-wtb-hero-text">
+                <div class="ig-wtb-tag">Edukasi Anabul</div>
+                <h2 class="ig-wtb-headline">{{ $headline }}</h2>
             </div>
-        @endif
-    </div>
-
-    {{-- Content Layer: Blue panel --}}
-    <div class="ig-wtb-panel">
-        @foreach(array_slice($points, 0, 3) as $i => $pt)
-            @php
-                $parts = explode(':', $pt, 2);
-                $hasKey = count($parts) === 2 && strlen($parts[0]) <= 35;
-            @endphp
-            <div class="ig-wtb-point">
-                <div class="ig-wtb-num">#{{ $i + 1 }}</div>
-                <div class="ig-wtb-text">
-                    @if($hasKey)
-                        <strong style="color:#ffffff;">{{ trim($parts[0]) }}:</strong> {{ trim($parts[1]) }}
-                    @else
-                        {{ $pt }}
-                    @endif
+            @if($hasImage)
+                <div class="ig-wtb-photo-thumb">
+                    <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
                 </div>
-            </div>
-        @endforeach
+            @endif
+        </div>
 
-        {{-- Brand Layer: Bottom (inside blue panel) --}}
-        @include('instagram_studio.partials.dot_bar_white', compact('brand','slideNum','totalSlides'))
+        <div class="ig-wtb-cards">
+            @foreach(array_slice($points, 0, 3) as $i => $pt)
+                @php
+                    $parts = explode(':', $pt, 2);
+                    $hasKey = count($parts) === 2 && strlen($parts[0]) <= 35;
+                @endphp
+                <div class="ig-wtb-card">
+                    <div class="ig-wtb-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    <div class="ig-wtb-card-text">
+                        @if($hasKey)
+                            <strong class="ig-wtb-key">{{ trim($parts[0]) }}</strong>
+                            <div class="ig-wtb-val">{{ trim($parts[1]) }}</div>
+                        @else
+                            <div class="ig-wtb-val">{{ $pt }}</div>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        </div>
     </div>
+
+    {{-- Brand Layer: Bottom --}}
+    @include('instagram_studio.partials.dot_bar', compact('brand','slideNum','totalSlides'))
 </div>
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
@@ -316,7 +327,7 @@
 </div>
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-{{-- LAYOUT 5: split_reverse — Photo left 40%, text right 60%                   --}}
+{{-- LAYOUT 5: split_reverse — Photo left 44%, text right 56%                   --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @elseif($layout === 'split_reverse')
 <div class="ig-canvas ig-lyt-split">
@@ -325,21 +336,31 @@
 
     {{-- Content Layer: Split --}}
     <div class="ig-sr-content">
-        <div class="ig-sr-photo">
+        <div class="ig-sr-photo-wrap">
             @if($hasImage)
                 <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
             @else
                 @include('instagram_studio.partials.photo_placeholder')
             @endif
         </div>
-        <div class="ig-sr-text">
-            <div class="ig-sr-tag">{{ strtoupper($purpose === 'problem' ? 'Gejala' : ($purpose === 'tips' ? 'Tips' : 'Info')) }}</div>
-            <div class="ig-sr-headline">{{ $headline }}</div>
+        <div class="ig-sr-text-zone">
+            <div class="ig-sr-tag">{{ strtoupper($purpose === 'problem' ? 'Gejala' : ($purpose === 'tips' ? 'Tips' : 'Edukasi')) }}</div>
+            <h2 class="ig-sr-headline">{{ $headline }}</h2>
             <div class="ig-sr-points">
                 @foreach(array_slice($points, 0, 3) as $pt)
-                    <div class="ig-sr-point">
-                        <span class="ig-sr-dot"></span>
-                        <span class="ig-sr-pt">{{ $pt }}</span>
+                    @php
+                        $parts = explode(':', $pt, 2);
+                        $hasKey = count($parts) === 2 && strlen($parts[0]) <= 35;
+                    @endphp
+                    <div class="ig-sr-point-card">
+                        <i class="bi bi-check2-circle ig-sr-icon"></i>
+                        <div class="ig-sr-pt-desc">
+                            @if($hasKey)
+                                <strong>{{ trim($parts[0]) }}:</strong> {{ trim($parts[1]) }}
+                            @else
+                                {{ $pt }}
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -502,50 +523,50 @@
 </div>
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-{{-- LAYOUT 10: cta_full — CTA closing slide (always last slide)                --}}
+{{-- LAYOUT 10: cta_full — CTA closing slide (Penutup & Reservasi)                --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @else{{-- cta_full --}}
 <div class="ig-canvas ig-lyt-cta">
     {{-- Decorative: paw prints --}}
     <div class="ig-deco-paw ig-paw-cta-1">🐾</div>
     <div class="ig-deco-paw ig-paw-cta-2">🐾</div>
-    <div class="ig-deco-blob ig-blob-cta"></div>
 
     {{-- Brand Layer: Top --}}
     @include('instagram_studio.partials.brand_bar', compact('brand','slideNum','totalSlides'))
 
     {{-- Content Layer --}}
     <div class="ig-cf-body">
-        <div class="ig-cf-tagline">{{ $brand['tagline'] ?? 'Kepercayaan Anda Adalah Prioritas Kami' }}</div>
-        <div class="ig-cf-headline">{{ !empty($headline) ? $headline : 'Konsultasikan ke ' . $clinicName . '!' }}</div>
+        <div class="ig-cf-tag"><i class="bi bi-heart-pulse-fill me-1"></i>{{ $brand['tagline'] ?? 'Klinik Hewan Terpercaya' }}</div>
+        <h2 class="ig-cf-headline">{{ !empty($headline) ? $headline : 'Yuk, Jadwalkan Perawatan Anabul Hari Ini!' }}</h2>
 
         @if($hasImage)
-            <div class="ig-cf-photo">
+            <div class="ig-cf-photo-card">
                 <img src="{{ $imageUrl }}" alt="" class="ig-photo-fill">
             </div>
         @endif
 
-        <div class="ig-cf-box">
-            <div class="ig-cf-box-icon"><i class="bi bi-house-medical-fill"></i></div>
-            <div>
-                <div class="ig-cf-box-title">{{ $brand['clinic_name'] }}</div>
-                <div class="ig-cf-box-desc">{{ !empty($body) ? Str::limit($body, 90) : ($brand['tagline'] ?? 'Klinik hewan terpercaya untuk hewan kesayangan Anda.') }}</div>
+        <div class="ig-cf-clinic-box">
+            <div class="ig-cf-box-left">
+                <i class="bi bi-hospital-fill"></i>
+            </div>
+            <div class="ig-cf-box-right">
+                <div class="ig-cf-box-name">{{ $brand['clinic_name'] }}</div>
+                <div class="ig-cf-box-sub">{{ !empty($body) ? Str::limit($body, 85) : 'Kesehatan dan kenyamanan anabul adalah prioritas utama kami.' }}</div>
             </div>
         </div>
 
-        <div class="ig-cf-features">
+        <div class="ig-cf-chips">
             @if($ctaFeatures)
                 @foreach(array_slice($ctaFeatures, 0, 3) as $feat)
-                    <div class="ig-cf-feat">
+                    <div class="ig-cf-chip">
                         <i class="bi {{ $feat['icon'] }}"></i>
                         <span>{{ $feat['label'] }}</span>
                     </div>
                 @endforeach
             @else
-                {{-- Fallback hanya jika DB tidak ada layanan sama sekali --}}
-                <div class="ig-cf-feat"><i class="bi bi-clipboard2-pulse"></i><span>Periksa</span></div>
-                <div class="ig-cf-feat"><i class="bi bi-shield-check"></i><span>Vaksin</span></div>
-                <div class="ig-cf-feat"><i class="bi bi-scissors"></i><span>Grooming</span></div>
+                <div class="ig-cf-chip"><i class="bi bi-clipboard2-pulse"></i><span>Konsultasi</span></div>
+                <div class="ig-cf-chip"><i class="bi bi-shield-check"></i><span>Vaksinasi</span></div>
+                <div class="ig-cf-chip"><i class="bi bi-scissors"></i><span>Grooming</span></div>
             @endif
         </div>
     </div>

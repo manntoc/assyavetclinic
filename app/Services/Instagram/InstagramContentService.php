@@ -53,7 +53,7 @@ class InstagramContentService
 
         $rawText = $response['choices'][0]['message']['content'] ?? '';
 
-        return $this->parseAndValidate($rawText, $slideCount);
+        return $this->parseAndValidate($rawText, $slideCount, $templateStyle);
     }
 
     /**
@@ -431,7 +431,7 @@ REC,
     // JSON extraction & validation
     // -------------------------------------------------------------------------
 
-    private function parseAndValidate(string $rawText, int $expectedSlideCount): array
+    private function parseAndValidate(string $rawText, int $expectedSlideCount, string $templateStyle = 'auto'): array
     {
         $data = $this->extractJson($rawText);
 
@@ -439,13 +439,34 @@ REC,
             throw new \Exception('AI tidak menghasilkan slides. Raw: ' . substr($rawText, 0, 200));
         }
 
+        // Layout mapping sesuai template style yang dipilih user jika bukan auto
+        $templateDefaultLayout = match($templateStyle) {
+            'hero'        => 'hook_center',
+            'text_focus'  => 'white_top_blue',
+            'split'       => 'split_reverse',
+            'case_study'  => 'navy_full',
+            'educational' => 'card_grid',
+            default       => null,
+        };
+
         // Ensure slide_number is sequential
         foreach ($data['slides'] as $i => &$slide) {
             $slide['slide_number'] = $i + 1;
             $slide['headline']     = $slide['headline'] ?? '';
             $slide['body']         = $slide['body']     ?? '';
-            $slide['purpose']      = $slide['purpose']  ?? 'hook';
-            $slide['layout']       = $slide['layout']   ?? 'hook_center';
+            $slide['purpose']      = $slide['purpose']  ?? ($i === 0 ? 'hook' : ($i === $expectedSlideCount - 1 ? 'cta' : 'education'));
+            
+            // Tentukan layout: jika user pilih template tertentu & bukan slide pertama/terakhir, terapkan template default
+            if ($slide['purpose'] === 'cta') {
+                $slide['layout'] = 'cta_full';
+            } elseif ($i === 0 && ($templateStyle === 'hero' || $templateStyle === 'auto')) {
+                $slide['layout'] = 'hook_center';
+            } elseif ($templateDefaultLayout) {
+                $slide['layout'] = $templateDefaultLayout;
+            } else {
+                $slide['layout'] = $slide['layout'] ?? 'hook_center';
+            }
+
             $slide['image_prompt'] = $slide['image_prompt'] ?? '';
         }
         unset($slide);

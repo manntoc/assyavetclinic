@@ -93,7 +93,7 @@ function scheduleSlideAutosave(slideId) {
     saveTimers[slideId] = setTimeout(() => saveSlide(slideId), 1000);
 }
 
-function saveSlide(slideId) {
+function saveSlide(slideId, forceReRender = false) {
     const headline = document.querySelector(`.slide-headline-input[data-slide-id="${slideId}"]`)?.value;
     const body     = document.querySelector(`.slide-body-input[data-slide-id="${slideId}"]`)?.value;
     const layout   = document.querySelector(`.slide-layout-select[data-slide-id="${slideId}"]`)?.value;
@@ -103,8 +103,25 @@ function saveSlide(slideId) {
             if (res.success) {
                 const status = document.getElementById('save-status-' + slideId);
                 if (status) { status.style.display = ''; setTimeout(() => status.style.display = 'none', 2000); }
-                // Update canvas text live
-                updateCanvasLive(slideId, headline, body);
+                
+                if (forceReRender) {
+                    // Re-render canvas HTML immediately when layout changes
+                    const canvasRoute = route('slideCanvas', { slideId });
+                    fetch(canvasRoute, {
+                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json' }
+                    })
+                    .then(r => r.json())
+                    .then(cr => {
+                        if (cr.success && cr.html) {
+                            const wrapper = document.querySelector(`.ig-slide-preview[data-slide-id="${slideId}"]`);
+                            if (wrapper) wrapper.innerHTML = cr.html;
+                        }
+                    })
+                    .catch(() => {});
+                } else {
+                    // Update canvas text live
+                    updateCanvasLive(slideId, headline, body);
+                }
             }
         })
         .catch(() => showToast('Gagal menyimpan slide.', 'error'));
@@ -113,10 +130,8 @@ function saveSlide(slideId) {
 function updateCanvasLive(slideId, headline, body) {
     const canvas = document.querySelector(`.ig-slide-preview[data-slide-id="${slideId}"]`);
     if (!canvas) return;
-    const h = canvas.querySelector('.ig-headline');
-    const b = canvas.querySelector('.ig-body');
+    const h = canvas.querySelector('.ig-headline, .ig-hc-headline, .ig-nf-headline, .ig-wtb-headline, .ig-cg-headline, .ig-sr-headline, .ig-cf-headline');
     if (h) h.textContent = headline || '';
-    if (b) b.textContent = body || '';
 }
 
 document.querySelectorAll('.slide-headline-input, .slide-body-input').forEach(el => {
@@ -124,7 +139,7 @@ document.querySelectorAll('.slide-headline-input, .slide-body-input').forEach(el
 });
 
 document.querySelectorAll('.slide-layout-select').forEach(el => {
-    el.addEventListener('change', () => saveSlide(el.dataset.slideId));
+    el.addEventListener('change', () => saveSlide(el.dataset.slideId, true));
 });
 
 // ─── Regenerate Single Slide ──────────────────────────────────────────────────
