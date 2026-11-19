@@ -76,6 +76,11 @@ class NineRouterService
         } catch (Exception $e) {
             Log::error('9Router Service Exception: ' . $e->getMessage());
             throw $e;
+        } finally {
+            // Reconnect database in case the HTTP request to AI took long and MySQL idle connection timed out
+            try {
+                \Illuminate\Support\Facades\DB::reconnect();
+            } catch (\Throwable) {}
         }
     }
 

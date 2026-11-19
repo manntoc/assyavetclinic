@@ -90,7 +90,19 @@ class InstagramContent extends Model
     {
         do {
             $kode = 'IG' . strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 7));
-        } while (self::where('kode_konten', $kode)->exists());
+            try {
+                $exists = self::where('kode_konten', $kode)->exists();
+            } catch (\Throwable $e) {
+                if (str_contains(strtolower($e->getMessage()), 'gone away') || str_contains(strtolower($e->getMessage()), 'lost connection')) {
+                    try {
+                        \Illuminate\Support\Facades\DB::reconnect();
+                    } catch (\Throwable) {}
+                    $exists = self::where('kode_konten', $kode)->exists();
+                } else {
+                    throw $e;
+                }
+            }
+        } while ($exists);
 
         return $kode;
     }

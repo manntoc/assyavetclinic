@@ -121,6 +121,11 @@ class InstagramContentController extends Controller
                 sourceData:    $sourceData
             );
 
+            // Reconnect DB fresh after external AI call
+            try {
+                \Illuminate\Support\Facades\DB::reconnect();
+            } catch (\Throwable) {}
+
             $brand = InstagramBrandResolver::resolve();
 
             // Save content record
@@ -158,6 +163,10 @@ class InstagramContentController extends Controller
                 ->with('success', 'Konten Instagram berhasil digenerate!');
 
         } catch (\Exception $e) {
+            try {
+                \Illuminate\Support\Facades\DB::reconnect();
+            } catch (\Throwable) {}
+
             Log::error('InstagramContentController@generate: ' . $e->getMessage());
             return back()->withInput()
                 ->with('error', 'Gagal generate konten: ' . $e->getMessage());

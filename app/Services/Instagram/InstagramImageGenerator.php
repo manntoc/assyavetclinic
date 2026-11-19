@@ -90,6 +90,11 @@ class InstagramImageGenerator
         } catch (\Exception $e) {
             Log::error('InstagramImageGenerator: ' . $e->getMessage());
             return null;
+        } finally {
+            // Reconnect database after external AI image generation
+            try {
+                \Illuminate\Support\Facades\DB::reconnect();
+            } catch (\Throwable) {}
         }
     }
 
